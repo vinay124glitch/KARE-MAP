@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # KARE Campus Map - Real-Time Navigation
 
 A premium, interactive 3D campus map web application built for **Kalasalingam Academy of Research and Education (KARE)**. This application features real-time GPS tracking, heading detection, and 3D building visualization.
@@ -42,3 +43,7 @@ The map data is stored in `src/data/campus.json` in GeoJSON format. You can easi
 
 ---
 Built with ❤️ for KARE.
+=======
+# KARE-MAP
+COLLEGE MAPPING
+>>>>>>> d685ed5a0b40e3e2d694dee79abba22ddc74601c

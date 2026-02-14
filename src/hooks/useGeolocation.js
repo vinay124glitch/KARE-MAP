@@ -31,6 +31,7 @@ export const useGeolocation = (simulate = false) => {
       return;
     }
 
+    // Request higher frequency updates for live tracking
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         setLocation({
@@ -40,16 +41,29 @@ export const useGeolocation = (simulate = false) => {
           speed: position.coords.speed,
         });
 
-        if (position.coords.heading !== null) {
+        if (position.coords.heading !== null && position.coords.heading !== undefined) {
           setHeading(position.coords.heading);
         }
+        setError(null); // Clear any previous errors on success
       },
       (err) => {
-        setError(err.message);
+        let errorMsg = 'Unknown error occurred.';
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            errorMsg = 'Please enable Location permissions in your browser settings.';
+            break;
+          case err.POSITION_UNAVAILABLE:
+            errorMsg = 'GPS signal not found. Are you outdoors?';
+            break;
+          case err.TIMEOUT:
+            errorMsg = 'Location request timed out. Checking again...';
+            break;
+        }
+        setError(errorMsg);
       },
       {
         enableHighAccuracy: true,
-        timeout: 15000,
+        timeout: 10000,
         maximumAge: 0,
       }
     );

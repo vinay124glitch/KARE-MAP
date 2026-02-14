@@ -191,19 +191,28 @@ const MapComponent = ({ userLocation, heading, otherUsers = [], destination, onP
         map.current.setStyle(STYLES[theme] || STYLES.dark);
     }, [theme]);
 
-    // Update Camera (User Marker handled by UserMarker component)
+    // Update Camera to follow User
     useEffect(() => {
         if (!map.current || !userLocation || !mapLoaded || !isFollowing) return;
 
         const { lng, lat } = userLocation;
+        const currentCenter = map.current.getCenter();
 
-        map.current.easeTo({
-            center: [lng, lat],
-            duration: 1000,
-            essential: true,
-            zoom: Math.max(map.current.getZoom(), 16)
-        });
-    }, [userLocation, mapLoaded, isFollowing]);
+        // Only jump if we've moved significantly or if we're just starting to follow
+        const distanceMoved = Math.sqrt(
+            Math.pow(lng - currentCenter.lng, 2) +
+            Math.pow(lat - currentCenter.lat, 2)
+        );
+
+        if (distanceMoved > 0.00001) {
+            map.current.easeTo({
+                center: [lng, lat],
+                duration: 1000,
+                essential: true,
+                padding: destination ? { top: 120 } : { top: 0 } // Add padding if HUD is visible
+            });
+        }
+    }, [userLocation, mapLoaded, isFollowing, destination]);
 
     // Update Other Users Markers
     useEffect(() => {
@@ -286,14 +295,42 @@ const MapComponent = ({ userLocation, heading, otherUsers = [], destination, onP
         }
     }, [destination, selectedPoi, mapLoaded]);
 
-    // Draw Route
+    // Draw Route with Animation
     useEffect(() => {
-        if (!map.current || !mapLoaded || !destination || !userLocation) return;
+        if (!map.current || !mapLoaded || !destination || !userLocation) {
+            if (map.current && map.current.getLayer('route-line')) {
+                map.current.setLayoutProperty('route-line', 'visibility', 'none');
+                map.current.setLayoutProperty('route-line-pulse', 'visibility', 'none');
+            }
+            return;
+        }
 
-        const routeSource = map.current.getSource('route');
+        // Calculate destination coordinates if not provided (same logic as marker)
+        let destCoords = destination.coords;
+        if (!destCoords && destination.name) {
+            const feature = campusData.features.find(f => f.properties.name === destination.name);
+            if (feature) {
+                if (feature.geometry.type === 'Point') {
+                    destCoords = feature.geometry.coordinates;
+                } else if (feature.geometry.type === 'LineString') {
+                    const points = feature.geometry.coordinates;
+                    const sumLng = points.reduce((acc, c) => acc + c[0], 0);
+                    const sumLat = points.reduce((acc, c) => acc + c[1], 0);
+                    destCoords = [sumLng / points.length, sumLat / points.length];
+                } else {
+                    const flatCoords = feature.geometry.coordinates[0];
+                    const sumLng = flatCoords.reduce((acc, c) => acc + c[0], 0);
+                    const sumLat = flatCoords.reduce((acc, c) => acc + c[1], 0);
+                    destCoords = [sumLng / flatCoords.length, sumLat / flatCoords.length];
+                }
+            }
+        }
+
+        if (!destCoords) return;
+
         const routeCoords = [
             [userLocation.lng, userLocation.lat],
-            destination.coords
+            destCoords
         ];
 
         const routeData = {
@@ -305,14 +342,18 @@ const MapComponent = ({ userLocation, heading, otherUsers = [], destination, onP
             }
         };
 
+        const routeSource = map.current.getSource('route');
         if (routeSource) {
             routeSource.setData(routeData);
+            map.current.setLayoutProperty('route-line', 'visibility', 'visible');
+            map.current.setLayoutProperty('route-line-pulse', 'visibility', 'visible');
         } else {
             map.current.addSource('route', {
                 'type': 'geojson',
                 'data': routeData
             });
 
+            // Bottom layer - thick line
             map.current.addLayer({
                 'id': 'route-line',
                 'type': 'line',
@@ -324,14 +365,48 @@ const MapComponent = ({ userLocation, heading, otherUsers = [], destination, onP
                 'paint': {
                     'line-color': '#10b981',
                     'line-width': 8,
-                    'line-opacity': 0.8
+                    'line-opacity': 0.4
                 }
             });
+
+            // Top layer - pulsing dashed line
+            map.current.addLayer({
+                'id': 'route-line-pulse',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#10b981',
+                    'line-width': 4,
+                    'line-dasharray': [1, 2]
+                }
+            });
+
+            // Animate dash offset for a "moving" effect
+            let step = 0;
+            const animate = () => {
+                if (!map.current || !map.current.getLayer('route-line-pulse')) return;
+
+                step = (step + 0.1) % 4;
+                // We simulate movement by slightly changing the dash array
+                // MapLibre doesn't support dashoffset animation easily, so we toggle between arrays
+                const dashArray = step > 2 ? [1, 2] : [0.5, 2.5];
+
+                if (map.current.getLayer('route-line-pulse')) {
+                    map.current.setPaintProperty('route-line-pulse', 'line-dasharray', dashArray);
+                }
+
+                requestAnimationFrame(animate);
+            };
+            // animate(); // Keeping it disabled for now as it might be too much, but ready to enable
         }
 
         const bounds = new maplibregl.LngLatBounds();
         routeCoords.forEach(coord => bounds.extend(coord));
-        map.current.fitBounds(bounds, { padding: 80 });
+        map.current.fitBounds(bounds, { padding: 120, duration: 2000 });
 
     }, [destination, userLocation, mapLoaded]);
 

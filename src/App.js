@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import MapComponent from './components/MapComponent';
 import NavigationPanel from './components/NavigationPanel';
 import { useGeolocation } from './hooks/useGeolocation';
-import { Play, Pause } from 'lucide-react';
+import { useNavigation } from './hooks/useNavigation';
+import { Play, Pause, Navigation as NavIcon } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -13,6 +14,8 @@ function App() {
     const [destination, setDestination] = useState(null);
     const [selectedPoi, setSelectedPoi] = useState(null);
     const [otherUsers, setOtherUsers] = useState([]);
+
+    const { navInfo } = useNavigation(location, destination);
 
     // Simulate other users on campus
     React.useEffect(() => {
@@ -35,8 +38,14 @@ function App() {
         return () => clearInterval(interval);
     }, []);
 
+    const handleSelectLocation = (locationData) => {
+        setSelectedPoi(locationData);
+        setDestination(locationData);
+        setIsFollowing(true); // Automatically follow when navigating
+    };
+
     const handlePoiClick = (poi) => {
-        setSelectedPoi(poi);
+        handleSelectLocation(poi);
     };
 
     const clearPoi = () => {
@@ -80,16 +89,30 @@ function App() {
                     <span>{mapTheme === 'dark' ? 'Satellite' : 'Dark'}</span>
                 </button>
 
-                {/* Follow Mode Toggle */}
+                {/* Follow Mode Toggle / Locate Me */}
                 <button
                     className={`theme-toggle glass-morphism ${isFollowing ? 'active' : ''}`}
-                    onClick={() => setIsFollowing(!isFollowing)}
-                    title={isFollowing ? "Disable Follow Mode" : "Enable Follow Mode"}
+                    onClick={() => {
+                        setIsFollowing(true);
+                        // Force a re-center even if already following
+                        if (location) {
+                            // Find the map instance and fly to user
+                            const mapInstance = document.querySelector('.maplibregl-map')?.map;
+                            if (mapInstance) {
+                                mapInstance.flyTo({
+                                    center: [location.lng, location.lat],
+                                    zoom: 18,
+                                    duration: 1500
+                                });
+                            }
+                        }
+                    }}
+                    title={isFollowing ? "Re-center Map" : "Locate Me"}
                 >
                     <div className="theme-toggle-icon">
-                        {isFollowing ? '📍' : '🧭'}
+                        {isFollowing ? '🎯' : '🧭'}
                     </div>
-                    <span>{isFollowing ? 'Following' : 'Locate Me'}</span>
+                    <span>{isFollowing ? 'Re-center' : 'Locate Me'}</span>
                 </button>
             </div>
 
@@ -105,8 +128,30 @@ function App() {
                 selectedPoi={selectedPoi}
             />
 
+            {/* Directions HUD */}
+            {destination && (
+                <div className="directions-hud glass-morphism animate-in-top">
+                    <div className="directions-icon">
+                        <NavIcon size={20} color="white" />
+                    </div>
+                    <div className="directions-content">
+                        <h4 className="directions-title">Navigating to {destination.name}</h4>
+                        <div className="directions-stats">
+                            {navInfo ? (
+                                <span>{navInfo.distance} • {navInfo.time} away</span>
+                            ) : (
+                                <span>Calculating path...</span>
+                            )}
+                        </div>
+                    </div>
+                    <button className="close-directions" onClick={clearPoi}>
+                        ✕
+                    </button>
+                </div>
+            )}
+
             <NavigationPanel
-                onSelectDestination={setDestination}
+                onSelectDestination={handleSelectLocation}
                 selectedPoi={selectedPoi}
                 onClearPoi={clearPoi}
                 userLocation={location}
