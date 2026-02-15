@@ -14,30 +14,8 @@ function App() {
     const [startPoint, setStartPoint] = useState(null);
     const [destination, setDestination] = useState(null);
     const [selectedPoi, setSelectedPoi] = useState(null);
-    const [otherUsers, setOtherUsers] = useState([]);
 
     const { navInfo } = useNavigation(startPoint || location, destination);
-
-    // Simulate other users on campus
-    React.useEffect(() => {
-        const initialUsers = [
-            { id: 1, name: 'Suresh', lat: 9.5746, lng: 77.6758, speed: 0.00005 },
-            { id: 2, name: 'Priya', lat: 9.5752, lng: 77.6752, speed: 0.00003 },
-            { id: 3, name: 'Rahul', lat: 9.5738, lng: 77.6745, speed: 0.00004 },
-            { id: 4, name: 'Anita', lat: 9.5725, lng: 77.6735, speed: 0.00006 }
-        ];
-        setOtherUsers(initialUsers);
-
-        const interval = setInterval(() => {
-            setOtherUsers(prev => prev.map(user => ({
-                ...user,
-                lat: user.lat + (Math.random() - 0.5) * user.speed,
-                lng: user.lng + (Math.random() - 0.5) * user.speed
-            })));
-        }, 2000);
-
-        return () => clearInterval(interval);
-    }, []);
 
     const handleSelectDestination = (locationData) => {
         setSelectedPoi(locationData);
@@ -128,8 +106,8 @@ function App() {
                 userLocation={location}
                 startPoint={startPoint}
                 heading={heading}
-                otherUsers={otherUsers}
                 destination={destination}
+                routePath={navInfo?.path}
                 onPoiClick={handlePoiClick}
                 theme={mapTheme}
                 isFollowing={isFollowing}

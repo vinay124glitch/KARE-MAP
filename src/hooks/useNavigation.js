@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import campusData from '../data/campusData';
+import { routingEngine } from '../utils/routing';
 
 export const useNavigation = (userLocation, selectedPoi) => {
 
@@ -7,10 +8,13 @@ export const useNavigation = (userLocation, selectedPoi) => {
     const calculateDistance = (coord1, coord2) => {
         if (!coord1 || !coord2) return null;
         const R = 6371e3; // Earth radius in meters
-        const phi1 = (coord1.lat * Math.PI) / 180;
-        const phi2 = (coord2.lat * Math.PI) / 180;
-        const deltaPhi = ((coord2.lat - coord1.lat) * Math.PI) / 180;
-        const deltaLambda = ((coord2.lng - coord1.lng) * Math.PI) / 180;
+        const p1 = Array.isArray(coord1) ? { lng: coord1[0], lat: coord1[1] } : coord1;
+        const p2 = Array.isArray(coord2) ? { lng: coord2[0], lat: coord2[1] } : coord2;
+
+        const phi1 = (p1.lat * Math.PI) / 180;
+        const phi2 = (p2.lat * Math.PI) / 180;
+        const deltaPhi = ((p2.lat - p1.lat) * Math.PI) / 180;
+        const deltaLambda = ((p2.lng - p1.lng) * Math.PI) / 180;
 
         const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
             Math.cos(phi1) * Math.cos(phi2) *
@@ -23,9 +27,8 @@ export const useNavigation = (userLocation, selectedPoi) => {
     const navInfo = useMemo(() => {
         if (!selectedPoi || !userLocation) return null;
 
-        // selectedPoi might have coords directly or we might need to find it from campusData
+        // Extract destination coordinates
         let destCoords = selectedPoi.coords;
-        // If selectedPoi doesn't have coords but has a name, try to find it
         if (!destCoords && selectedPoi.name) {
             const feature = campusData.features.find(f => f.properties.name === selectedPoi.name);
             if (feature) {
@@ -47,10 +50,28 @@ export const useNavigation = (userLocation, selectedPoi) => {
 
         if (!destCoords) return null;
 
-        const distance = calculateDistance(userLocation, { lng: destCoords[0], lat: destCoords[1] });
+        // Find road-snapped path
+        const start = [userLocation.lng, userLocation.lat];
+        const path = routingEngine.findPath(start, destCoords);
+
+        let distance = 0;
+        let finalPath = path;
+
+        if (path && path.length > 1) {
+            // Calculate total distance along the road path
+            for (let i = 0; i < path.length - 1; i++) {
+                distance += calculateDistance(path[i], path[i + 1]);
+            }
+        } else {
+            // Fallback to straight line if no path found
+            distance = calculateDistance(userLocation, { lng: destCoords[0], lat: destCoords[1] });
+            finalPath = [start, destCoords];
+        }
+
         const time = Math.round(distance / 1.4); // Assume 1.4 m/s walking speed
 
         return {
+            path: finalPath,
             distanceRaw: distance,
             timeRaw: time,
             distance: distance > 1000 ? `${(distance / 1000).toFixed(1)} km` : `${Math.round(distance)} m`,
@@ -60,3 +81,4 @@ export const useNavigation = (userLocation, selectedPoi) => {
 
     return { navInfo };
 };
+

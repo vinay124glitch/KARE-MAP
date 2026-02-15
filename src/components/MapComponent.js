@@ -4,13 +4,21 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import campusData from '../data/campusData';
 import UserMarker from './UserMarker';
 
-const MapComponent = ({ userLocation, startPoint, heading, otherUsers = [], destination, onPoiClick, theme, isFollowing, setIsFollowing, selectedPoi }) => {
+const MapComponent = ({ userLocation, startPoint, heading, destination, routePath, onPoiClick, theme, isFollowing, setIsFollowing, selectedPoi }) => {
     const mapContainer = useRef(null);
     const map = useRef(null);
     const [mapInstance, setMapInstance] = useState(null);
-    const otherMarkers = useRef({});
     const destinationMarker = useRef(null);
     const [mapLoaded, setMapLoaded] = useState(false);
+
+    // KARE Campus Configuration
+    const CAMPUS_CENTER = [77.6743, 9.5743];
+    const CAMPUS_BOUNDS = [
+        [77.665, 9.565], // Southwest corner
+        [77.685, 9.585]  // Northeast corner
+    ];
+    const MIN_ZOOM = 15;
+    const MAX_ZOOM = 21;
 
     const STYLES = {
         dark: 'https://tiles.openfreemap.org/styles/dark',
@@ -135,12 +143,22 @@ const MapComponent = ({ userLocation, startPoint, heading, otherUsers = [], dest
         map.current = new maplibregl.Map({
             container: mapContainer.current,
             style: STYLES[theme] || STYLES.dark,
-            center: [77.6761, 9.5743],
-            zoom: 16.5,
-            pitch: 45,
+            center: CAMPUS_CENTER,
+            zoom: 17,
+            pitch: 0,
             bearing: 0,
-            antialias: true
+            maxBounds: CAMPUS_BOUNDS,
+            minZoom: MIN_ZOOM,
+            maxZoom: MAX_ZOOM,
+            antialias: true,
+            renderWorldCopies: false
         });
+
+        // Add navigation controls
+        map.current.addControl(new maplibregl.NavigationControl({
+            showCompass: true,
+            visualizePitch: true
+        }), 'bottom-right');
 
         const onLoad = () => {
             setMapLoaded(true);
@@ -176,7 +194,6 @@ const MapComponent = ({ userLocation, startPoint, heading, otherUsers = [], dest
             if (map.current) {
                 // Background cleanup of markers
                 if (destinationMarker.current) destinationMarker.current.remove();
-                Object.values(otherMarkers.current).forEach(m => m.remove());
 
                 map.current.remove();
                 map.current = null;
@@ -191,56 +208,29 @@ const MapComponent = ({ userLocation, startPoint, heading, otherUsers = [], dest
         map.current.setStyle(STYLES[theme] || STYLES.dark);
     }, [theme]);
 
-    // Update Camera to follow User
+    // Update Camera for Forward Navigation Mode
     useEffect(() => {
         if (!map.current || !userLocation || !mapLoaded || !isFollowing) return;
 
         const { lng, lat } = userLocation;
-        const currentCenter = map.current.getCenter();
 
-        // Only jump if we've moved significantly or if we're just starting to follow
-        const distanceMoved = Math.sqrt(
-            Math.pow(lng - currentCenter.lng, 2) +
-            Math.pow(lat - currentCenter.lat, 2)
-        );
+        // Navigation Mode settings
+        const targetPitch = 60; // Tilt for 3D navigation feeling
+        const targetBearing = heading !== null ? heading : map.current.getBearing();
 
-        if (distanceMoved > 0.00001) {
-            map.current.easeTo({
-                center: [lng, lat],
-                duration: 1000,
-                essential: true,
-                padding: destination ? { top: 120 } : { top: 0 } // Add padding if HUD is visible
-            });
-        }
-    }, [userLocation, mapLoaded, isFollowing, destination]);
-
-    // Update Other Users Markers
-    useEffect(() => {
-        if (!map.current || !mapLoaded) return;
-
-        // Add or update markers for each user
-        otherUsers.forEach(user => {
-            if (!otherMarkers.current[user.id]) {
-                const el = document.createElement('div');
-                el.className = 'other-user-marker';
-                el.innerHTML = `<div class="other-user-dot"></div><div class="other-user-label">${user.name}</div>`;
-
-                otherMarkers.current[user.id] = new maplibregl.Marker({ element: el })
-                    .setLngLat([user.lng, user.lat])
-                    .addTo(map.current);
-            } else {
-                otherMarkers.current[user.id].setLngLat([user.lng, user.lat]);
-            }
+        map.current.easeTo({
+            center: [lng, lat],
+            bearing: targetBearing,
+            pitch: targetPitch,
+            duration: 1200,
+            essential: true,
+            // Keep user slightly lower center of screen for forward navigation visibility
+            offset: [0, 150],
+            padding: { top: 100 }
         });
+    }, [userLocation, heading, mapLoaded, isFollowing]);
 
-        // Remove markers for users no longer in the list
-        Object.keys(otherMarkers.current).forEach(id => {
-            if (!otherUsers.find(u => u.id === parseInt(id))) {
-                otherMarkers.current[id].remove();
-                delete otherMarkers.current[id];
-            }
-        });
-    }, [otherUsers, mapLoaded]);
+
 
     // Handle Destination Marker and Map Center for POI
     useEffect(() => {
@@ -338,7 +328,7 @@ const MapComponent = ({ userLocation, startPoint, heading, otherUsers = [], dest
 
         if (!destCoords) return;
 
-        const routeCoords = [
+        const routeCoords = routePath || [
             startCoords,
             destCoords
         ];
@@ -418,7 +408,7 @@ const MapComponent = ({ userLocation, startPoint, heading, otherUsers = [], dest
         routeCoords.forEach(coord => bounds.extend(coord));
         map.current.fitBounds(bounds, { padding: 120, duration: 2000 });
 
-    }, [destination, userLocation, startPoint, mapLoaded]);
+    }, [destination, userLocation, startPoint, routePath, mapLoaded]);
 
     return (
         <div className="map-wrapper" style={{ width: '100%', height: '100vh' }}>

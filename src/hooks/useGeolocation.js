@@ -34,17 +34,32 @@ export const useGeolocation = (simulate = false) => {
     // Request higher frequency updates for live tracking
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          speed: position.coords.speed,
+        const newLat = position.coords.latitude;
+        const newLng = position.coords.longitude;
+
+        setLocation(prev => {
+          // Calculate heading if not provided by device
+          if (position.coords.heading === null || position.coords.heading === undefined) {
+            if (prev && (prev.lat !== newLat || prev.lng !== newLng)) {
+              const y = Math.sin((newLng - prev.lng) * Math.PI / 180) * Math.cos(newLat * Math.PI / 180);
+              const x = Math.cos(prev.lat * Math.PI / 180) * Math.sin(newLat * Math.PI / 180) -
+                Math.sin(prev.lat * Math.PI / 180) * Math.cos(newLat * Math.PI / 180) * Math.cos((newLng - prev.lng) * Math.PI / 180);
+              const bearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+              setHeading(bearing);
+            }
+          } else {
+            setHeading(position.coords.heading);
+          }
+
+          return {
+            lat: newLat,
+            lng: newLng,
+            accuracy: position.coords.accuracy,
+            speed: position.coords.speed,
+          };
         });
 
-        if (position.coords.heading !== null && position.coords.heading !== undefined) {
-          setHeading(position.coords.heading);
-        }
-        setError(null); // Clear any previous errors on success
+        setError(null);
       },
       (err) => {
         let errorMsg = 'Unknown error occurred.';
