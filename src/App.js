@@ -25,7 +25,11 @@ function App() {
 
     const handleSelectStartPoint = (locationData) => {
         setStartPoint(locationData);
-        setIsFollowing(false);
+        if (locationData === null) {
+            setIsFollowing(true);
+        } else {
+            setIsFollowing(false);
+        }
     };
 
     const handlePoiClick = (poi) => {

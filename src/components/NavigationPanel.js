@@ -16,6 +16,7 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
                         placeholder={startPoint?.name || "Your Current Location"}
                         active={isSelectingStart}
                         onFocus={() => setIsSelectingStart(true)}
+                        showMyLocation={true}
                     />
                 </div>
                 <div className="search-box-wrapper">
