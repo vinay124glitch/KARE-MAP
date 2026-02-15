@@ -127,6 +127,66 @@ class RoutingEngine {
 
         return null; // No path found
     }
+    // For Debugging: Export graph as GeoJSON
+    getGraphGeoJSON() {
+        const features = [];
+
+        // Add Nodes
+        for (const [key, neighbors] of this.graph.entries()) {
+            const coord = this.parseNodeKey(key);
+            features.push({
+                type: 'Feature',
+                properties: { type: 'node' },
+                geometry: { type: 'Point', coordinates: coord }
+            });
+
+            // Add Edges
+            neighbors.forEach(neighbor => {
+                const neighborCoord = this.parseNodeKey(neighbor.node);
+                features.push({
+                    type: 'Feature',
+                    properties: { type: 'edge' },
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [coord, neighborCoord]
+                    }
+                });
+            });
+        }
+        return { type: 'FeatureCollection', features };
+    }
+
+    // Drift Correction: Find nearest point on any edge in the graph
+    snapToRoad(coord) {
+        let minDistance = Infinity;
+        let snappedPoint = coord;
+
+        for (const [uKey, neighbors] of this.graph.entries()) {
+            const p1 = this.parseNodeKey(uKey);
+            neighbors.forEach(neighbor => {
+                const p2 = this.parseNodeKey(neighbor.node);
+                const projected = this.getNearestPointOnSegment(coord, p1, p2);
+                const dist = this.getDistance(coord, projected);
+
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    snappedPoint = projected;
+                }
+            });
+        }
+
+        // Only snap if we are within a reasonable distance (e.g., 20m)
+        return minDistance < 0.0002 ? snappedPoint : coord;
+    }
+
+    getNearestPointOnSegment(p, a, b) {
+        const atob = [b[0] - a[0], b[1] - a[1]];
+        const atop = [p[0] - a[0], p[1] - a[1]];
+        const len = atob[0] * atob[0] + atob[1] * atob[1];
+        let dot = atop[0] * atob[0] + atop[1] * atob[1];
+        let t = Math.min(1, Math.max(0, dot / len));
+        return [a[0] + atob[0] * t, a[1] + atob[1] * t];
+    }
 }
 
 class PriorityQueue {

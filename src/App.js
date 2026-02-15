@@ -14,6 +14,7 @@ function App() {
     const [startPoint, setStartPoint] = useState(null);
     const [destination, setDestination] = useState(null);
     const [selectedPoi, setSelectedPoi] = useState(null);
+    const [debugMode, setDebugMode] = useState(false);
 
     const { navInfo } = useNavigation(startPoint || location, destination);
 
@@ -113,6 +114,16 @@ function App() {
                     </div>
                     <span>{isFollowing ? 'Re-center' : 'Locate Me'}</span>
                 </button>
+
+                {/* Debug Mode Toggle */}
+                <button
+                    className={`debug-toggle glass-morphism ${debugMode ? 'active' : ''}`}
+                    onClick={() => setDebugMode(!debugMode)}
+                    title="Toggle Debug Map (Show Graph Nodes & Edges)"
+                >
+                    <div style={{ fontSize: '1.2rem' }}>🛠️</div>
+                    <span style={{ display: 'none' }}>Debug</span>
+                </button>
             </div>
 
             <MapComponent
@@ -126,6 +137,8 @@ function App() {
                 isFollowing={isFollowing}
                 setIsFollowing={setIsFollowing}
                 selectedPoi={selectedPoi}
+                debugMode={debugMode}
+                navInfo={navInfo}
             />
 
             {/* Directions HUD */}
@@ -211,3 +224,4 @@ function App() {
 }
 
 export default App;
+// Triggering rebuild to fix white screen issue.

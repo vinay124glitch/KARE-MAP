@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import campusData from '../data/campusData';
 import UserMarker from './UserMarker';
+import { routingEngine } from '../utils/routing';
 
-const MapComponent = ({ userLocation, startPoint, heading, destination, routePath, onPoiClick, theme, isFollowing, setIsFollowing, selectedPoi }) => {
+const MapComponent = ({ userLocation, startPoint, heading, destination, routePath, onPoiClick, theme, isFollowing, setIsFollowing, selectedPoi, debugMode, navInfo }) => {
     const mapContainer = useRef(null);
     const map = useRef(null);
     const [mapInstance, setMapInstance] = useState(null);
@@ -413,6 +414,52 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
 
     }, [destination, userLocation, startPoint, routePath, mapLoaded]);
 
+    // Debug Mode Overlay
+    useEffect(() => {
+        if (!map.current || !mapLoaded) return;
+
+        if (debugMode) {
+            if (!map.current.getSource('debug-graph')) {
+                map.current.addSource('debug-graph', {
+                    type: 'geojson',
+                    data: routingEngine.getGraphGeoJSON()
+                });
+
+                map.current.addLayer({
+                    id: 'debug-edges',
+                    type: 'line',
+                    source: 'debug-graph',
+                    filter: ['==', 'type', 'edge'],
+                    paint: {
+                        'line-color': '#f59e0b',
+                        'line-width': 1,
+                        'line-opacity': 0.5
+                    }
+                });
+
+                map.current.addLayer({
+                    id: 'debug-nodes',
+                    type: 'circle',
+                    source: 'debug-graph',
+                    filter: ['==', 'type', 'node'],
+                    paint: {
+                        'circle-radius': 3,
+                        'circle-color': '#f59e0b',
+                        'circle-opacity': 0.8
+                    }
+                });
+            } else {
+                map.current.setLayoutProperty('debug-edges', 'visibility', 'visible');
+                map.current.setLayoutProperty('debug-nodes', 'visibility', 'visible');
+            }
+        } else {
+            if (map.current.getLayer('debug-edges')) {
+                map.current.setLayoutProperty('debug-edges', 'visibility', 'none');
+                map.current.setLayoutProperty('debug-nodes', 'visibility', 'none');
+            }
+        }
+    }, [debugMode, mapLoaded]);
+
     return (
         <div className="map-wrapper" style={{ width: '100%', height: '100vh' }}>
             <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
@@ -424,3 +471,4 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
 };
 
 export default MapComponent;
+// Rebuild trigger.

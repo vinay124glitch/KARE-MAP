@@ -33,6 +33,26 @@ const UserMarker = ({ map, location, heading }) => {
             arrowEl.style.transform = `rotate(${heading}deg)`;
         }
 
+        // Handle Accuracy Circle
+        let accuracyEl = markerRef.current.getElement().querySelector('.accuracy-circle');
+        if (!accuracyEl) {
+            accuracyEl = document.createElement('div');
+            accuracyEl.className = 'accuracy-circle';
+            markerRef.current.getElement().appendChild(accuracyEl);
+        }
+
+        if (location.accuracy) {
+            // Meters to pixels conversion at current zoom
+            const lat = location.lat;
+            const metersPerPixel = (Math.cos(lat * Math.PI / 180) * 40075017) / (256 * Math.pow(2, map.getZoom()));
+            const radiusPx = (location.accuracy / metersPerPixel) * 2;
+            accuracyEl.style.width = `${radiusPx}px`;
+            accuracyEl.style.height = `${radiusPx}px`;
+            accuracyEl.style.display = 'block';
+        } else {
+            accuracyEl.style.display = 'none';
+        }
+
         // Cleanup
         return () => {
             if (markerRef.current) {
