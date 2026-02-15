@@ -3,7 +3,7 @@ import MapComponent from './components/MapComponent';
 import NavigationPanel from './components/NavigationPanel';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useNavigation } from './hooks/useNavigation';
-import { Play, Pause, Navigation as NavIcon } from 'lucide-react';
+import { Play, Pause, Navigation as NavIcon, ArrowUp, CornerUpLeft, CornerUpRight, CheckCircle } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -15,6 +15,7 @@ function App() {
     const [destination, setDestination] = useState(null);
     const [selectedPoi, setSelectedPoi] = useState(null);
     const [debugMode, setDebugMode] = useState(false);
+    const [showHeatmap, setShowHeatmap] = useState(false);
 
     const { navInfo } = useNavigation(startPoint || location, destination);
 
@@ -62,7 +63,7 @@ function App() {
             )}
 
             {/* Control Buttons Group */}
-            <div className="map-controls-group">
+            <div className={`map-controls-group ${destination ? 'has-hud' : ''}`}>
                 {/* Simulation Toggle */}
                 <button
                     className={`sim-toggle glass-morphism ${isSimulating ? 'active' : ''}`}
@@ -115,6 +116,17 @@ function App() {
                     <span>{isFollowing ? 'Re-center' : 'Locate Me'}</span>
                 </button>
 
+                {/* Heatmap Toggle */}
+                <button
+                    className={`theme-toggle glass-morphism ${showHeatmap ? 'active' : ''}`}
+                    onClick={() => setShowHeatmap(!showHeatmap)}
+                    title="Show Campus Activity Pulse (Heatmap)"
+                    style={showHeatmap ? { background: 'linear-gradient(135deg, #f43f5e, #e11d48)', borderColor: '#fb7185' } : {}}
+                >
+                    <div className="theme-toggle-icon">🔥</div>
+                    <span>Pulse</span>
+                </button>
+
                 {/* Debug Mode Toggle */}
                 <button
                     className={`debug-toggle glass-morphism ${debugMode ? 'active' : ''}`}
@@ -139,27 +151,28 @@ function App() {
                 selectedPoi={selectedPoi}
                 debugMode={debugMode}
                 navInfo={navInfo}
+                showHeatmap={showHeatmap}
             />
 
             {/* Directions HUD */}
             {destination && (
                 <div className="directions-hud glass-morphism animate-in-top">
                     <div className="directions-icon">
-                        <NavIcon size={20} color="white" />
+                        {navInfo?.instructionType === 'left' ? <CornerUpLeft size={24} color="white" /> :
+                            navInfo?.instructionType === 'right' ? <CornerUpRight size={24} color="white" /> :
+                                navInfo?.instructionType === 'arrival' ? <CheckCircle size={24} color="#10b981" /> :
+                                    <ArrowUp size={24} color="white" />}
                     </div>
                     <div className="directions-content">
-                        <h4 className="directions-title">
-                            {startPoint ? `From ${startPoint.name} to ${destination.name}` : `Navigating to ${destination.name}`}
+                        <h4 className="directions-title" style={{ fontSize: '18px', color: '#60a5fa', fontWeight: 700 }}>
+                            {navInfo?.nextInstruction || 'Calculating path...'}
                         </h4>
                         <div className="directions-stats">
-                            {navInfo ? (
-                                <span>{navInfo.distance} • {navInfo.time} away</span>
-                            ) : (
-                                <span>Calculating path...</span>
-                            )}
+                            <span style={{ fontWeight: 600, color: 'white' }}>{destination.name}</span>
+                            {navInfo && <span style={{ marginLeft: '8px', opacity: 0.8 }}>• {navInfo.distance} • {navInfo.time}</span>}
                         </div>
                     </div>
-                    <button className="close-directions" onClick={clearPoi}>
+                    <button className="close-directions" onClick={clearPoi} title="Exit Navigation">
                         ✕
                     </button>
                 </div>

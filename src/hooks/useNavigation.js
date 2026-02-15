@@ -70,12 +70,51 @@ export const useNavigation = (userLocation, selectedPoi) => {
 
         const time = Math.round(distance / 1.4); // Assume 1.4 m/s walking speed
 
+        // Simple Next Instruction Logic
+        let nextInstruction = "Head towards destination";
+        let instructionType = "straight";
+
+        if (finalPath && finalPath.length > 2) {
+            const p1 = finalPath[0];
+            const p2 = finalPath[1];
+            const p3 = finalPath[2];
+
+            const getBearing = (a, b) => {
+                const y = Math.sin((b[0] - a[0]) * Math.PI / 180) * Math.cos(b[1] * Math.PI / 180);
+                const x = Math.cos(a[1] * Math.PI / 180) * Math.sin(b[1] * Math.PI / 180) -
+                    Math.sin(a[1] * Math.PI / 180) * Math.cos(b[1] * Math.PI / 180) * Math.cos((b[0] - a[0]) * Math.PI / 180);
+                return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+            };
+
+            const bearing1 = getBearing(p1, p2);
+            const bearing2 = getBearing(p2, p3);
+            let diff = bearing2 - bearing1;
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+
+            if (Math.abs(diff) < 25) {
+                nextInstruction = "Go straight ahead";
+                instructionType = "straight";
+            } else if (diff > 0) {
+                nextInstruction = `Turn right after ${Math.round(calculateDistance(p1, p2))}m`;
+                instructionType = "right";
+            } else {
+                nextInstruction = `Turn left after ${Math.round(calculateDistance(p1, p2))}m`;
+                instructionType = "left";
+            }
+        } else if (distance < 30) {
+            nextInstruction = "Arriving at destination";
+            instructionType = "arrival";
+        }
+
         return {
             path: finalPath,
             distanceRaw: distance,
             timeRaw: time,
             distance: distance > 1000 ? `${(distance / 1000).toFixed(1)} km` : `${Math.round(distance)} m`,
-            time: time > 60 ? `${Math.round(time / 60)} min` : `${time} sec`
+            time: time > 60 ? `${Math.round(time / 60)} min` : `${time} sec`,
+            nextInstruction,
+            instructionType
         };
     }, [selectedPoi, userLocation]);
 

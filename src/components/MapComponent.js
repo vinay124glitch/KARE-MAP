@@ -5,7 +5,7 @@ import campusData from '../data/campusData';
 import UserMarker from './UserMarker';
 import { routingEngine } from '../utils/routing';
 
-const MapComponent = ({ userLocation, startPoint, heading, destination, routePath, onPoiClick, theme, isFollowing, setIsFollowing, selectedPoi, debugMode, navInfo }) => {
+const MapComponent = ({ userLocation, startPoint, heading, destination, routePath, onPoiClick, theme, isFollowing, setIsFollowing, selectedPoi, debugMode, navInfo, showHeatmap }) => {
     const mapContainer = useRef(null);
     const map = useRef(null);
     const [mapInstance, setMapInstance] = useState(null);
@@ -265,7 +265,7 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
             center: [lng, lat],
             bearing: targetBearing,
             pitch: targetPitch,
-            duration: 1200,
+            duration: 800,
             essential: true,
             // Keep user slightly lower center of screen for forward navigation visibility
             offset: [0, 150],
@@ -449,9 +449,70 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
 
         const bounds = new maplibregl.LngLatBounds();
         routeCoords.forEach(coord => bounds.extend(coord));
-        map.current.fitBounds(bounds, { padding: 120, duration: 2000 });
+        const padding = window.innerWidth < 640 ? 40 : 120;
+        map.current.fitBounds(bounds, { padding: padding, duration: 2000 });
 
     }, [destination, userLocation, startPoint, routePath, mapLoaded]);
+
+    // Heatmap (Campus Pulse) Overlay
+    useEffect(() => {
+        if (!map.current || !mapLoaded) return;
+
+        if (showHeatmap) {
+            if (!map.current.getSource('campus-pulse')) {
+                // Generate simulated hotspots around known POIs
+                const hotspots = campusData.features
+                    .filter(f => f.properties.category === 'Food' || f.properties.category === 'Hostel' || f.properties.category === 'Library')
+                    .map(f => {
+                        let coords;
+                        if (f.geometry.type === 'Point') coords = f.geometry.coordinates;
+                        else if (f.geometry.type === 'LineString') coords = f.geometry.coordinates[0];
+                        else coords = f.geometry.coordinates[0][0];
+
+                        return {
+                            type: 'Feature',
+                            properties: { intensity: Math.random() * 8 + 4 },
+                            geometry: { type: 'Point', coordinates: coords }
+                        };
+                    });
+
+                map.current.addSource('campus-pulse', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: hotspots }
+                });
+
+                map.current.addLayer({
+                    id: 'pulse-heatmap',
+                    type: 'heatmap',
+                    source: 'campus-pulse',
+                    maxzoom: 21,
+                    paint: {
+                        'heatmap-weight': ['get', 'intensity'],
+                        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 15, 1, 21, 3],
+                        'heatmap-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['heatmap-density'],
+                            0, 'rgba(0,0,0,0)',
+                            0.2, 'rgba(0,102,255,0.2)',
+                            0.4, 'rgba(0,255,255,0.4)',
+                            0.6, 'rgba(0,255,102,0.6)',
+                            0.8, 'rgba(255,255,0,0.8)',
+                            1, 'rgba(255,60,0,0.9)'
+                        ],
+                        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 15, 15, 21, 60],
+                        'heatmap-opacity': 0.7
+                    }
+                });
+            } else {
+                map.current.setLayoutProperty('pulse-heatmap', 'visibility', 'visible');
+            }
+        } else {
+            if (map.current.getLayer('pulse-heatmap')) {
+                map.current.setLayoutProperty('pulse-heatmap', 'visibility', 'none');
+            }
+        }
+    }, [showHeatmap, mapLoaded]);
 
     // Debug Mode Overlay
     useEffect(() => {

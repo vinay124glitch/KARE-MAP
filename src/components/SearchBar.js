@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, MapPin } from 'lucide-react';
+import { Search, MapPin, Coffee, Book, Home, FlaskConical } from 'lucide-react';
 import campusData from '../data/campusData';
 
 const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings...", onFocus, showMyLocation = false, externalSearch = '' }) => {
@@ -17,7 +17,7 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
         const query = typeof e === 'string' ? e : e.target.value;
         setSearchQuery(query);
 
-        if (query.length > 0) { // Allow searching for categories even with 1 char
+        if (query.length > 0) {
             const results = campusData.features.filter(f =>
                 (f.properties.name && f.properties.name.toLowerCase().includes(query.toLowerCase())) ||
                 (f.properties.type && f.properties.type.toLowerCase().includes(query.toLowerCase()))
@@ -60,6 +60,22 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
         setSearchResults([]);
     };
 
+    const getIcon = (feature) => {
+        if (!feature || !feature.properties) return <MapPin size={16} color="var(--primary)" />;
+
+        const cat = (feature.properties.category || '').toLowerCase();
+        const type = (feature.properties.type || '').toLowerCase();
+        const name = (feature.properties.name || '').toLowerCase();
+
+        if (cat === 'food' || name.includes('mess') || name.includes('canteen')) return <Coffee size={16} color="#f59e0b" />;
+        if (cat === 'hostel' || name.includes('hostel')) return <Home size={16} color="#ec4899" />;
+        if (cat === 'academic' || name.includes('block') || name.includes('auditorium')) return <Book size={16} color="#3b82f6" />;
+        if (cat === 'lab' || name.includes('lab')) return <FlaskConical size={16} color="#10b981" />;
+        if (cat === 'library' || name.includes('library')) return <Book size={16} color="#a855f7" />;
+
+        return <MapPin size={16} color="var(--primary)" />;
+    };
+
     return (
         <div className="search-container">
             <div className="glass-morphism" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -92,7 +108,7 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
                         <div
                             onClick={() => selectResult('MY_LOCATION')}
                             style={{
-                                padding: '12px 16px',
+                                padding: window.innerWidth < 480 ? '14px 16px' : '12px 16px',
                                 cursor: 'pointer',
                                 borderBottom: searchResults.length > 0 ? '1px solid var(--glass-border)' : 'none',
                                 display: 'flex',
@@ -103,17 +119,18 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
                             className="hover-effect"
                         >
                             <div style={{
-                                width: '20px',
-                                height: '20px',
-                                background: 'var(--primary)',
+                                width: '24px',
+                                height: '24px',
+                                background: 'rgba(99, 102, 241, 0.2)',
                                 borderRadius: '50%',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                flexShrink: 0
                             }}>
-                                <div style={{ width: '8px', height: '8px', background: 'white', borderRadius: '50%' }} />
+                                <div style={{ width: '8px', height: '8px', background: 'var(--primary)', borderRadius: '50%', boxShadow: '0 0 10px var(--primary-glow)' }} />
                             </div>
-                            <span style={{ fontWeight: 600 }}>Use Live Location</span>
+                            <span style={{ fontWeight: 600, fontSize: window.innerWidth < 480 ? '15px' : '14px' }}>Use My Live Location</span>
                         </div>
                     )}
                     {searchResults.map((result, idx) => (
@@ -121,7 +138,7 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
                             key={idx}
                             onClick={() => selectResult(result)}
                             style={{
-                                padding: '12px 16px',
+                                padding: window.innerWidth < 480 ? '14px 16px' : '12px 16px',
                                 cursor: 'pointer',
                                 borderBottom: idx === searchResults.length - 1 ? 'none' : '1px solid var(--glass-border)',
                                 display: 'flex',
@@ -130,8 +147,21 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
                             }}
                             className="hover-effect"
                         >
-                            <MapPin size={16} color="var(--primary)" />
-                            <span>{result.properties.name}</span>
+                            <div className="result-icon-wrapper" style={{ opacity: 0.9, flexShrink: 0 }}>
+                                {getIcon(result)}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                                <span style={{
+                                    fontWeight: 500,
+                                    fontSize: window.innerWidth < 480 ? '15px' : '14px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                }}>{result.properties.name}</span>
+                                {result.properties.category && (
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{result.properties.category}</span>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </div>
