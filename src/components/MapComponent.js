@@ -22,6 +22,9 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
 
     const STYLES = {
         dark: 'https://tiles.openfreemap.org/styles/dark',
+        light: 'https://tiles.openfreemap.org/styles/positron',
+        streets: 'https://tiles.openfreemap.org/styles/liberty',
+        bright: 'https://tiles.openfreemap.org/styles/bright',
         satellite: {
             'version': 8,
             'sources': {

@@ -42,8 +42,14 @@ function App() {
         setStartPoint(null);
     };
 
+    const THEMES = ['satellite', 'streets', 'dark', 'light', 'bright'];
+
     const toggleTheme = () => {
-        setMapTheme(prev => prev === 'dark' ? 'satellite' : 'dark');
+        setMapTheme(prev => {
+            const currentIndex = THEMES.indexOf(prev);
+            const nextIndex = (currentIndex + 1) % THEMES.length;
+            return THEMES[nextIndex];
+        });
     };
 
     return (
@@ -70,12 +76,15 @@ function App() {
                 <button
                     className="theme-toggle glass-morphism"
                     onClick={toggleTheme}
-                    title={`Switch to ${mapTheme === 'dark' ? 'Satellite' : 'Dark'} View`}
+                    title={`Switch Map View (Current: ${mapTheme})`}
                 >
                     <div className="theme-toggle-icon">
-                        {mapTheme === 'dark' ? '🛰️' : '🌑'}
+                        {mapTheme === 'satellite' ? '🛰️' :
+                            mapTheme === 'dark' ? '🌑' :
+                                mapTheme === 'light' ? '☀️' :
+                                    mapTheme === 'streets' ? '🗺️' : '🎨'}
                     </div>
-                    <span>{mapTheme === 'dark' ? 'Satellite' : 'Dark'}</span>
+                    <span style={{ textTransform: 'capitalize' }}>{mapTheme}</span>
                 </button>
 
                 {/* Follow Mode Toggle / Locate Me */}
