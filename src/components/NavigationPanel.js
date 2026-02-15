@@ -5,6 +5,7 @@ import RouteOverlay from './RouteOverlay';
 
 const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, selectedPoi, onClearPoi, userLocation }) => {
     const [isSelectingStart, setIsSelectingStart] = React.useState(false);
+    const [activeSearch, setActiveSearch] = React.useState('');
 
     return (
         <div className="navigation-container">
@@ -25,7 +26,20 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
                         onSelectDestination={onSelectDestination}
                         placeholder={selectedPoi?.name || "Search campus buildings..."}
                         onFocus={() => setIsSelectingStart(false)}
+                        externalSearch={activeSearch}
                     />
+                </div>
+
+                <div className="category-chips-container">
+                    {['Hostel', 'Academic', 'Food', 'Lab', 'Library'].map(cat => (
+                        <div
+                            key={cat}
+                            className={`category-chip ${activeSearch === cat ? 'active' : ''}`}
+                            onClick={() => setActiveSearch(prev => prev === cat ? '' : cat)}
+                        >
+                            {cat}s
+                        </div>
+                    ))}
                 </div>
             </div>
 

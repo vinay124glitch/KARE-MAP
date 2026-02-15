@@ -53,7 +53,7 @@ function App() {
     };
 
     return (
-        <div className="app-container">
+        <div className={`app-container ${destination ? 'has-hud' : ''}`}>
             {error && !isSimulating && (
                 <div className="error-toast glass-morphism">
                     {error}. Using default campus view.

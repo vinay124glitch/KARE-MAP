@@ -125,15 +125,22 @@ h4 {
 
 .navigation-container {
   position: absolute;
-  top: 20px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 90%;
+  width: 95%;
   max-width: 500px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .navigation-container {
+    top: 20px;
+    width: 90%;
+  }
 }
 
 .search-group {
@@ -161,11 +168,27 @@ h4 {
 .search-container {
   flex: 1;
   position: relative;
-  /* Reset previous absolute positioning */
-  top: 0;
-  left: 0;
-  transform: none;
   width: 100%;
+}
+
+.search-results-dropdown {
+  position: fixed;
+  /* Use fixed for better scroll handling on mobile */
+  top: auto;
+  left: 5%;
+  width: 90%;
+  max-height: 50vh;
+  margin-top: 8px;
+  overflow-y: auto;
+  z-index: 2000;
+}
+
+@media (min-width: 640px) {
+  .search-results-dropdown {
+    position: absolute;
+    left: 0;
+    width: 100%;
+  }
 }
 
 .navigation-panel {
@@ -234,4 +257,42 @@ h4 {
     transform: translate(-50%, -50%) scale(2);
     opacity: 0;
   }
+}
+
+.category-chips-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.category-chips-container::-webkit-scrollbar {
+  display: none;
+}
+
+.category-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: var(--primary);
+}
+
+.category-chip.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
 }

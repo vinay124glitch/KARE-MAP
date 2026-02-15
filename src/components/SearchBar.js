@@ -2,18 +2,25 @@ import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import campusData from '../data/campusData';
 
-const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings...", onFocus, showMyLocation = false }) => {
+const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings...", onFocus, showMyLocation = false, externalSearch = '' }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isFocused, setIsFocused] = useState(false);
 
+    React.useEffect(() => {
+        if (externalSearch) {
+            handleSearch(externalSearch);
+        }
+    }, [externalSearch]);
+
     const handleSearch = (e) => {
-        const query = e.target.value;
+        const query = typeof e === 'string' ? e : e.target.value;
         setSearchQuery(query);
 
-        if (query.length > 1) {
+        if (query.length > 0) { // Allow searching for categories even with 1 char
             const results = campusData.features.filter(f =>
-                f.properties.name && f.properties.name.toLowerCase().includes(query.toLowerCase())
+                (f.properties.name && f.properties.name.toLowerCase().includes(query.toLowerCase())) ||
+                (f.properties.type && f.properties.type.toLowerCase().includes(query.toLowerCase()))
             );
             setSearchResults(results);
         } else {
@@ -80,14 +87,7 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
             </div>
 
             {((searchResults.length > 0) || (showMyLocation && isFocused)) && (
-                <div className="glass-morphism search-results-dropdown" style={{
-                    marginTop: '8px',
-                    maxHeight: '300px',
-                    overflowY: 'auto',
-                    position: 'absolute',
-                    width: '100%',
-                    zIndex: 1000
-                }}>
+                <div className="glass-morphism search-results-dropdown">
                     {showMyLocation && isFocused && (
                         <div
                             onClick={() => selectResult('MY_LOCATION')}
