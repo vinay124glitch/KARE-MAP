@@ -21,7 +21,7 @@ function App() {
     const handleSelectDestination = (locationData) => {
         setSelectedPoi(locationData);
         setDestination(locationData);
-        setIsFollowing(false); // Disable follow when manually selecting destination
+        setIsFollowing(true); // Automatically start live tracking
     };
 
     const handleSelectStartPoint = (locationData) => {

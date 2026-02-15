@@ -212,11 +212,50 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
         map.current.setStyle(STYLES[theme] || STYLES.dark);
     }, [theme]);
 
+    const speakInstruction = (text) => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+    };
+
+    const prevInstruction = useRef('');
+
+    // Voice Guidance & Drift Correction (Road Snapping)
+    const processedLocation = useMemo(() => {
+        if (!userLocation) return null;
+
+        // Road Snapping (Drift Correction)
+        const snapped = (destination || selectedPoi)
+            ? routingEngine.snapToRoad([userLocation.lng, userLocation.lat])
+            : [userLocation.lng, userLocation.lat];
+
+        // Basic Voice Trigger
+        if (destination && routePath && routePath.length > 0) {
+            const dist = navInfo?.distanceRaw;
+            if (dist < 20 && prevInstruction.current !== 'arrived') {
+                speakInstruction(`You have arrived at ${destination.name}`);
+                prevInstruction.current = 'arrived';
+            } else if (dist < 50 && prevInstruction.current !== 'near' && dist > 20) {
+                speakInstruction(`${destination.name} is just 50 meters ahead`);
+                prevInstruction.current = 'near';
+            }
+        }
+
+        return {
+            ...userLocation,
+            lng: snapped[0],
+            lat: snapped[1]
+        };
+    }, [userLocation, destination, selectedPoi, routePath, navInfo]);
+
     // Update Camera for Forward Navigation Mode
     useEffect(() => {
-        if (!map.current || !userLocation || !mapLoaded || !isFollowing) return;
+        if (!map.current || !processedLocation || !mapLoaded || !isFollowing) return;
 
-        const { lng, lat } = userLocation;
+        const { lng, lat } = processedLocation;
 
         // Navigation Mode settings
         const targetPitch = 60; // Tilt for 3D navigation feeling
@@ -232,7 +271,7 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
             offset: [0, 150],
             padding: { top: 100 }
         });
-    }, [userLocation, heading, mapLoaded, isFollowing]);
+    }, [processedLocation, heading, mapLoaded, isFollowing]);
 
 
 
@@ -460,11 +499,13 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
         }
     }, [debugMode, mapLoaded]);
 
+
+
     return (
         <div className="map-wrapper" style={{ width: '100%', height: '100vh' }}>
             <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
-            {mapInstance && userLocation && (
-                <UserMarker map={mapInstance} location={userLocation} heading={heading} />
+            {mapInstance && processedLocation && (
+                <UserMarker map={mapInstance} location={processedLocation} heading={heading} />
             )}
         </div>
     );

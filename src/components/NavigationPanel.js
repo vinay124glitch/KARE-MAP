@@ -91,18 +91,7 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
 
                         <RouteOverlay userLocation={startPoint || userLocation} selectedPoi={selectedPoi} />
 
-                        <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                            <button
-                                className="btn-primary"
-                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                                onClick={() => {
-                                    onSelectDestination(selectedPoi);
-                                }}
-                            >
-                                <Navigation size={18} />
-                                Start Navigation
-                            </button>
-                        </div>
+
                     </div>
                 </div>
             )}
