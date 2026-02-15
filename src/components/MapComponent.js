@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import campusData from '../data/campusData';
 import UserMarker from './UserMarker';
 
-const MapComponent = ({ userLocation, heading, otherUsers = [], destination, onPoiClick, theme, isFollowing, setIsFollowing, selectedPoi }) => {
+const MapComponent = ({ userLocation, startPoint, heading, otherUsers = [], destination, onPoiClick, theme, isFollowing, setIsFollowing, selectedPoi }) => {
     const mapContainer = useRef(null);
     const map = useRef(null);
     const [mapInstance, setMapInstance] = useState(null);
@@ -297,13 +297,23 @@ const MapComponent = ({ userLocation, heading, otherUsers = [], destination, onP
 
     // Draw Route with Animation
     useEffect(() => {
-        if (!map.current || !mapLoaded || !destination || !userLocation) {
+        if (!map.current || !mapLoaded || !destination || (!userLocation && !startPoint)) {
             if (map.current && map.current.getLayer('route-line')) {
                 map.current.setLayoutProperty('route-line', 'visibility', 'none');
                 map.current.setLayoutProperty('route-line-pulse', 'visibility', 'none');
             }
             return;
         }
+
+        // Calculate starting coordinates
+        let startCoords;
+        if (startPoint && startPoint.coords) {
+            startCoords = startPoint.coords;
+        } else if (userLocation) {
+            startCoords = [userLocation.lng, userLocation.lat];
+        }
+
+        if (!startCoords) return;
 
         // Calculate destination coordinates if not provided (same logic as marker)
         let destCoords = destination.coords;
@@ -329,7 +339,7 @@ const MapComponent = ({ userLocation, heading, otherUsers = [], destination, onP
         if (!destCoords) return;
 
         const routeCoords = [
-            [userLocation.lng, userLocation.lat],
+            startCoords,
             destCoords
         ];
 
@@ -408,7 +418,7 @@ const MapComponent = ({ userLocation, heading, otherUsers = [], destination, onP
         routeCoords.forEach(coord => bounds.extend(coord));
         map.current.fitBounds(bounds, { padding: 120, duration: 2000 });
 
-    }, [destination, userLocation, mapLoaded]);
+    }, [destination, userLocation, startPoint, mapLoaded]);
 
     return (
         <div className="map-wrapper" style={{ width: '100%', height: '100vh' }}>

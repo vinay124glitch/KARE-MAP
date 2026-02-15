@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import campusData from '../data/campusData';
 
-const SearchBar = ({ onSelectDestination }) => {
+const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings...", onFocus }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
 
@@ -51,9 +51,10 @@ const SearchBar = ({ onSelectDestination }) => {
                 <Search size={20} className="text-muted" />
                 <input
                     type="text"
-                    placeholder="Search campus buildings..."
+                    placeholder={placeholder}
                     value={searchQuery}
                     onChange={handleSearch}
+                    onFocus={onFocus}
                     style={{
                         background: 'transparent',
                         border: 'none',
@@ -67,7 +68,14 @@ const SearchBar = ({ onSelectDestination }) => {
             </div>
 
             {searchResults.length > 0 && (
-                <div className="glass-morphism" style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+                <div className="glass-morphism search-results-dropdown" style={{
+                    marginTop: '8px',
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    position: 'absolute',
+                    width: '100%',
+                    zIndex: 1000
+                }}>
                     {searchResults.map((result, idx) => (
                         <div
                             key={idx}

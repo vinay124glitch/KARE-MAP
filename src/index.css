@@ -123,25 +123,57 @@ h4 {
   box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
 }
 
-.search-container {
+.navigation-container {
   position: absolute;
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
   width: 90%;
   max-width: 500px;
-  z-index: 10;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-group {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-box-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.search-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 40px;
+  text-transform: uppercase;
+}
+
+.search-container {
+  flex: 1;
+  position: relative;
+  /* Reset previous absolute positioning */
+  top: 0;
+  left: 0;
+  transform: none;
+  width: 100%;
 }
 
 .navigation-panel {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 500px;
+  position: relative;
+  width: 100%;
   z-index: 10;
-  padding: 20px;
+  padding: 0;
+  margin-top: 8px;
 }
 
 .poi-card {

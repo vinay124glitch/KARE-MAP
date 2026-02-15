@@ -11,11 +11,12 @@ function App() {
     const [mapTheme, setMapTheme] = useState('satellite');
     const [isSimulating, setIsSimulating] = useState(false);
     const { location, heading, error } = useGeolocation(isSimulating);
+    const [startPoint, setStartPoint] = useState(null);
     const [destination, setDestination] = useState(null);
     const [selectedPoi, setSelectedPoi] = useState(null);
     const [otherUsers, setOtherUsers] = useState([]);
 
-    const { navInfo } = useNavigation(location, destination);
+    const { navInfo } = useNavigation(startPoint || location, destination);
 
     // Simulate other users on campus
     React.useEffect(() => {
@@ -38,19 +39,25 @@ function App() {
         return () => clearInterval(interval);
     }, []);
 
-    const handleSelectLocation = (locationData) => {
+    const handleSelectDestination = (locationData) => {
         setSelectedPoi(locationData);
         setDestination(locationData);
-        setIsFollowing(true); // Automatically follow when navigating
+        setIsFollowing(false); // Disable follow when manually selecting destination
+    };
+
+    const handleSelectStartPoint = (locationData) => {
+        setStartPoint(locationData);
+        setIsFollowing(false);
     };
 
     const handlePoiClick = (poi) => {
-        handleSelectLocation(poi);
+        handleSelectDestination(poi);
     };
 
     const clearPoi = () => {
         setSelectedPoi(null);
         setDestination(null);
+        setStartPoint(null);
     };
 
     const toggleTheme = () => {
@@ -94,6 +101,7 @@ function App() {
                     className={`theme-toggle glass-morphism ${isFollowing ? 'active' : ''}`}
                     onClick={() => {
                         setIsFollowing(true);
+                        setStartPoint(null); // Return to real-time location
                         // Force a re-center even if already following
                         if (location) {
                             // Find the map instance and fly to user
@@ -118,6 +126,7 @@ function App() {
 
             <MapComponent
                 userLocation={location}
+                startPoint={startPoint}
                 heading={heading}
                 otherUsers={otherUsers}
                 destination={destination}
@@ -135,7 +144,9 @@ function App() {
                         <NavIcon size={20} color="white" />
                     </div>
                     <div className="directions-content">
-                        <h4 className="directions-title">Navigating to {destination.name}</h4>
+                        <h4 className="directions-title">
+                            {startPoint ? `From ${startPoint.name} to ${destination.name}` : `Navigating to ${destination.name}`}
+                        </h4>
                         <div className="directions-stats">
                             {navInfo ? (
                                 <span>{navInfo.distance} • {navInfo.time} away</span>
@@ -151,7 +162,9 @@ function App() {
             )}
 
             <NavigationPanel
-                onSelectDestination={handleSelectLocation}
+                onSelectDestination={handleSelectDestination}
+                onSelectStartPoint={handleSelectStartPoint}
+                startPoint={startPoint}
                 selectedPoi={selectedPoi}
                 onClearPoi={clearPoi}
                 userLocation={location}
