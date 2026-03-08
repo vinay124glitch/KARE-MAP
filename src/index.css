@@ -85,10 +85,10 @@ body {
 .navigation-container {
   position: absolute;
   top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 94%;
+  left: 12px;
+  right: 12px;
   max-width: 520px;
+  margin: 0 auto;
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -142,6 +142,10 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
 
 .search-icon {
@@ -250,12 +254,16 @@ body {
 /* ========================= */
 
 .category-chips-container {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
   gap: 8px;
   overflow-x: auto;
   padding: 4px 2px 8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  width: 100%;
 }
 
 .category-chips-container::-webkit-scrollbar {
@@ -275,6 +283,10 @@ body {
   cursor: pointer;
   transition: all 0.25s ease;
   flex-shrink: 0;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
 }
 
 .category-chip:active {
@@ -844,7 +856,9 @@ body {
   /* --- Search bar: full width at top like Google Maps --- */
   .navigation-container {
     top: 8px;
-    width: 96%;
+    left: 8px;
+    right: 8px;
+    width: auto;
     gap: 8px;
   }
 
@@ -1016,8 +1030,9 @@ body {
 /* Extra-small phones (< 380px) */
 @media (max-width: 380px) {
   .navigation-container {
-    width: 98%;
     top: 6px;
+    left: 4px;
+    right: 4px;
   }
 
   .main-search-bar {
