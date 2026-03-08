@@ -10,6 +10,7 @@ import './App.css';
 function App() {
     const [isFollowing, setIsFollowing] = useState(true);
     const [mapTheme, setMapTheme] = useState('satellite');
+    const [forceStart, setForceStart] = useState(false);
     const { location, heading, error } = useGeolocation();
     const [startPoint, setStartPoint] = useState(null);
     const [destination, setDestination] = useState(null);
@@ -183,7 +184,7 @@ function App() {
             />
 
             <AnimatePresence>
-                {!location && !error && (
+                {!location && !error && !forceStart && (
                     <motion.div
                         className="loading-overlay"
                         initial={{ opacity: 0 }}
@@ -201,6 +202,16 @@ function App() {
                             </div>
                             <h3>KARE MAP</h3>
                             <p>Initializing campus navigation...</p>
+
+                            <div className="loading-actions" style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <button
+                                    className="btn-primary"
+                                    onClick={() => setForceStart(true)}
+                                    style={{ background: 'var(--primary)', color: 'white', padding: '12px', border: 'none', borderRadius: '20px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+                                >
+                                    Start Now
+                                </button>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
