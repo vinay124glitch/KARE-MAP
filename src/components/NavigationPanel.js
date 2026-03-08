@@ -92,11 +92,11 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
                 {selectedPoi && (
                     <motion.div
                         className="poi-panel-wrapper"
-                        initial={{ y: 200, opacity: 0 }}
+                        initial={{ y: 300, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 200, opacity: 0 }}
-                        transition={{ type: 'spring', damping: 20 }}
-                        style={{ position: 'fixed', bottom: '24px', left: '0', right: '0', display: 'flex', justifyContent: 'center', zIndex: 1000 }}
+                        exit={{ y: 300, opacity: 0 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 1000 }}
                     >
                         <div className="poi-card-premium glass-morphism">
                             <div className="poi-header">

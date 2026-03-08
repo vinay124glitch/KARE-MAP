@@ -52,7 +52,7 @@ function App() {
     };
 
     return (
-        <div className={`app-container ${destination ? 'has-hud' : ''}`}>
+        <div className={`app-container ${destination ? 'has-hud' : ''} ${selectedPoi ? 'has-poi' : ''}`}>
             <AnimatePresence>
                 {error && !isSimulating && (
                     <motion.div
@@ -70,16 +70,16 @@ function App() {
             {/* Sidebar Controls */}
             <motion.div
                 className="control-sidebar glass-morphism"
-                initial={{ x: 100, opacity: 0 }}
+                initial={{ x: 60, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ type: 'spring', damping: 20 }}
+                transition={{ type: 'spring', damping: 20, delay: 0.3 }}
             >
                 <button
                     className={`control-btn ${isSimulating ? 'active' : ''}`}
                     onClick={() => setIsSimulating(!isSimulating)}
                     title={isSimulating ? "Stop Simulation" : "Start Simulation"}
                 >
-                    {isSimulating ? <Pause size={22} className="text-secondary" /> : <Play size={22} />}
+                    {isSimulating ? <Pause size={20} className="text-secondary" /> : <Play size={20} />}
                 </button>
 
                 <div className="control-divider" />
@@ -89,7 +89,7 @@ function App() {
                     onClick={toggleTheme}
                     title={`Map View: ${mapTheme}`}
                 >
-                    <Layers size={22} />
+                    <Layers size={20} />
                 </button>
 
                 <button
@@ -110,7 +110,7 @@ function App() {
                     }}
                     title="Center on me"
                 >
-                    <Target size={22} className={isFollowing ? 'text-primary' : ''} />
+                    <Target size={20} className={isFollowing ? 'text-primary' : ''} />
                 </button>
 
                 <button
@@ -118,7 +118,7 @@ function App() {
                     onClick={() => setShowHeatmap(!showHeatmap)}
                     title="Activity Pulse"
                 >
-                    <Flame size={22} className={showHeatmap ? 'text-orange-500' : ''} />
+                    <Flame size={20} className={showHeatmap ? 'text-orange-500' : ''} />
                 </button>
 
                 <div className="control-divider" />
@@ -128,7 +128,7 @@ function App() {
                     onClick={() => setDebugMode(!debugMode)}
                     title="Developer Mode"
                 >
-                    <Settings size={22} />
+                    <Settings size={20} />
                 </button>
             </motion.div>
 
