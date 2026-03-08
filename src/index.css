@@ -603,10 +603,11 @@ body {
 
 .directions-hud {
   position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 94%;
+  top: 90px;
+  left: 12px;
+  right: 12px;
+  margin: 0 auto;
+  width: auto;
   max-width: 480px;
   display: flex;
   align-items: center;
@@ -965,8 +966,8 @@ body {
 
   /* --- Directions HUD: compact on mobile --- */
   .directions-hud {
-    top: 8px;
-    width: 96%;
+    top: 94px;
+    width: auto;
     gap: 10px;
     padding: 10px 12px;
     padding-top: calc(10px + var(--safe-top));
