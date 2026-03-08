@@ -9,6 +9,7 @@ import './App.css';
 
 function App() {
     const [isFollowing, setIsFollowing] = useState(true);
+    const [isNavigating, setIsNavigating] = useState(false);
     const [mapTheme, setMapTheme] = useState('satellite');
     const [forceStart, setForceStart] = useState(false);
     const { location, heading, error } = useGeolocation();
@@ -24,6 +25,7 @@ function App() {
         setSelectedPoi(locationData);
         setDestination(locationData);
         setIsFollowing(true);
+        setIsNavigating(false);
     };
 
     const handleSelectStartPoint = (locationData) => {
@@ -39,6 +41,7 @@ function App() {
         setSelectedPoi(null);
         setDestination(null);
         setStartPoint(null);
+        setIsNavigating(false);
     };
 
     const THEMES = ['satellite', 'streets', 'dark', 'light', 'bright'];
@@ -140,7 +143,7 @@ function App() {
 
             {/* Directions HUD */}
             <AnimatePresence>
-                {destination && (
+                {destination && isNavigating && (
                     <motion.div
                         key="directions-hud"
                         initial={{ opacity: 0, y: -50, scale: 0.95 }}
@@ -173,15 +176,17 @@ function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            <NavigationPanel
-                onSelectDestination={handleSelectDestination}
-                onSelectStartPoint={handleSelectStartPoint}
-                startPoint={startPoint}
-                selectedPoi={selectedPoi}
-                onClearPoi={clearPoi}
-                userLocation={location}
-            />
+            {!isNavigating && (
+                <NavigationPanel
+                    onSelectDestination={handleSelectDestination}
+                    onSelectStartPoint={handleSelectStartPoint}
+                    startPoint={startPoint}
+                    selectedPoi={selectedPoi}
+                    onClearPoi={clearPoi}
+                    userLocation={location}
+                    onStartNavigation={() => setIsNavigating(true)}
+                />
+            )}
 
             <AnimatePresence>
                 {!location && !error && !forceStart && (

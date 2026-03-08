@@ -4,7 +4,7 @@ import { Navigation, X, MapPin, Clock, Footprints } from 'lucide-react';
 import SearchBar from './SearchBar';
 import RouteOverlay from './RouteOverlay';
 
-const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, selectedPoi, onClearPoi, userLocation }) => {
+const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, selectedPoi, onClearPoi, userLocation, onStartNavigation }) => {
     const [isSelectingStart, setIsSelectingStart] = React.useState(false);
     const [activeSearch, setActiveSearch] = React.useState('');
     const [showRouteInputs, setShowRouteInputs] = React.useState(false);
@@ -96,7 +96,6 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 300, opacity: 0 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 1000 }}
                     >
                         <div className="poi-card-premium glass-morphism">
                             <div className="poi-header">
@@ -120,8 +119,29 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
                                 </div>
                             </div>
 
-                            <div className="poi-actions">
+                            <div className="poi-actions" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 <RouteOverlay userLocation={startPoint || userLocation} selectedPoi={selectedPoi} />
+                                <button
+                                    onClick={onStartNavigation}
+                                    style={{
+                                        width: '100%',
+                                        background: 'var(--primary)',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '12px 16px',
+                                        borderRadius: '24px',
+                                        fontSize: '15px',
+                                        fontWeight: '500',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 2px 6px rgba(26,115,232,0.3)'
+                                    }}
+                                >
+                                    <Footprints size={18} /> Start Navigation
+                                </button>
                             </div>
                         </div>
                     </motion.div>
