@@ -579,36 +579,112 @@ body {
 /* MAP MARKERS               */
 /* ========================= */
 
-.user-marker {
-  width: 20px;
-  height: 20px;
-  background: var(--primary);
-  border: 3px solid white;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+/* ========================= */
+/* HUMAN ANIMATION MARKER    */
+/* ========================= */
+
+.human-marker {
+  width: 44px;
+  height: 44px;
   position: relative;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+  /* Pull center up to offset bottom anchor */
+  transform: translateY(-50%);
 }
 
-.user-marker::before {
-  content: '';
-  position: absolute;
-  inset: -12px;
-  background: rgba(26, 115, 232, 0.15);
-  border: 1px solid rgba(26, 115, 232, 0.3);
-  border-radius: 50%;
-  animation: pulse-simple 2s infinite;
+.human-walking-container {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.2s ease-out;
 }
 
-.user-marker-heading {
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 16px solid var(--primary);
-  position: absolute;
-  top: -20px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+.human-avatar {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Base Walking Animations */
+@keyframes walk-left {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(-12px);
+  }
+
+  75% {
+    transform: translateY(12px);
+  }
+}
+
+@keyframes walk-right {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(12px);
+  }
+
+  75% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes torso-sway {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(8deg);
+  }
+
+  75% {
+    transform: rotate(-8deg);
+  }
+}
+
+@keyframes head-bob {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Attach animations only when moving */
+.human-marker.is-moving .left-foot {
+  animation: walk-left 0.7s infinite ease-in-out;
+}
+
+.human-marker.is-moving .right-foot {
+  animation: walk-right 0.7s infinite ease-in-out;
+}
+
+.human-marker.is-moving .torso {
+  animation: torso-sway 0.7s infinite ease-in-out;
+  transform-origin: 50% 50%;
+}
+
+.human-marker.is-moving .head {
+  animation: head-bob 0.35s infinite ease-in-out;
 }
 
 .accuracy-circle {
