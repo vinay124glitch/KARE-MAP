@@ -4,14 +4,13 @@ import MapComponent from './components/MapComponent';
 import NavigationPanel from './components/NavigationPanel';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useNavigation } from './hooks/useNavigation';
-import { Play, Pause, Navigation as NavIcon, ArrowUp, CornerUpLeft, CornerUpRight, CheckCircle, Layers, Target, Flame, Settings } from 'lucide-react';
+import { Navigation as NavIcon, ArrowUp, CornerUpLeft, CornerUpRight, CheckCircle, Layers, Target, Flame, Settings } from 'lucide-react';
 import './App.css';
 
 function App() {
     const [isFollowing, setIsFollowing] = useState(true);
     const [mapTheme, setMapTheme] = useState('satellite');
-    const [isSimulating, setIsSimulating] = useState(false);
-    const { location, heading, error } = useGeolocation(isSimulating);
+    const { location, heading, error } = useGeolocation();
     const [startPoint, setStartPoint] = useState(null);
     const [destination, setDestination] = useState(null);
     const [selectedPoi, setSelectedPoi] = useState(null);
@@ -54,7 +53,7 @@ function App() {
     return (
         <div className={`app-container ${destination ? 'has-hud' : ''} ${selectedPoi ? 'has-poi' : ''}`}>
             <AnimatePresence>
-                {error && !isSimulating && (
+                {error && (
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -74,16 +73,6 @@ function App() {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ type: 'spring', damping: 20, delay: 0.3 }}
             >
-                <button
-                    className={`control-btn ${isSimulating ? 'active' : ''}`}
-                    onClick={() => setIsSimulating(!isSimulating)}
-                    title={isSimulating ? "Stop Simulation" : "Start Simulation"}
-                >
-                    {isSimulating ? <Pause size={20} className="text-secondary" /> : <Play size={20} />}
-                </button>
-
-                <div className="control-divider" />
-
                 <button
                     className="control-btn"
                     onClick={toggleTheme}
@@ -194,7 +183,7 @@ function App() {
             />
 
             <AnimatePresence>
-                {!location && !error && !isSimulating && (
+                {!location && !error && (
                     <motion.div
                         className="loading-overlay"
                         initial={{ opacity: 0 }}
@@ -212,15 +201,6 @@ function App() {
                             </div>
                             <h3>KARE MAP</h3>
                             <p>Initializing campus navigation...</p>
-
-                            <div className="loading-actions">
-                                <button className="btn-primary" onClick={() => setIsSimulating(true)}>
-                                    Start Simulation
-                                </button>
-                                <button className="btn-secondary" onClick={() => setIsSimulating(true)}>
-                                    Virtual Mode
-                                </button>
-                            </div>
                         </motion.div>
                     </motion.div>
                 )}
