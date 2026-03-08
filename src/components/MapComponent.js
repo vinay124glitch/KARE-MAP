@@ -328,75 +328,85 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
         }
     }, [destination, selectedPoi, mapLoaded]);
 
-    // Draw Route with Animation
+    // Draw Route along roads only
     useEffect(() => {
         if (!map.current || !mapLoaded || !destination || (!userLocation && !startPoint)) {
-            if (map.current && map.current.getLayer('route-line')) {
-                map.current.setLayoutProperty('route-line', 'visibility', 'none');
-                map.current.setLayoutProperty('route-line-pulse', 'visibility', 'none');
-            }
+            // Hide route layers when no destination
+            ['route-glow', 'route-line', 'route-line-pulse', 'route-start-dot', 'route-end-dot'].forEach(layerId => {
+                if (map.current && map.current.getLayer(layerId)) {
+                    map.current.setLayoutProperty(layerId, 'visibility', 'none');
+                }
+            });
             return;
         }
 
-        // Calculate starting coordinates
-        let startCoords;
-        if (startPoint && startPoint.coords) {
-            startCoords = startPoint.coords;
-        } else if (userLocation) {
-            startCoords = [userLocation.lng, userLocation.lat];
-        }
-
-        if (!startCoords) return;
-
-        // Calculate destination coordinates if not provided (same logic as marker)
-        let destCoords = destination.coords;
-        if (!destCoords && destination.name) {
-            const feature = campusData.features.find(f => f.properties.name === destination.name);
-            if (feature) {
-                if (feature.geometry.type === 'Point') {
-                    destCoords = feature.geometry.coordinates;
-                } else if (feature.geometry.type === 'LineString') {
-                    const points = feature.geometry.coordinates;
-                    const sumLng = points.reduce((acc, c) => acc + c[0], 0);
-                    const sumLat = points.reduce((acc, c) => acc + c[1], 0);
-                    destCoords = [sumLng / points.length, sumLat / points.length];
-                } else {
-                    const flatCoords = feature.geometry.coordinates[0];
-                    const sumLng = flatCoords.reduce((acc, c) => acc + c[0], 0);
-                    const sumLat = flatCoords.reduce((acc, c) => acc + c[1], 0);
-                    destCoords = [sumLng / flatCoords.length, sumLat / flatCoords.length];
-                }
-            }
-        }
-
-        if (!destCoords) return;
-
-        const routeCoords = routePath || [
-            startCoords,
-            destCoords
-        ];
+        // Use ONLY the road-based path from the routing engine
+        if (!routePath || routePath.length < 2) return;
 
         const routeData = {
             'type': 'Feature',
             'properties': {},
             'geometry': {
                 'type': 'LineString',
-                'coordinates': routeCoords
+                'coordinates': routePath
             }
+        };
+
+        // Start/end point markers for the route
+        const endpointsData = {
+            'type': 'FeatureCollection',
+            'features': [
+                {
+                    type: 'Feature',
+                    properties: { role: 'start' },
+                    geometry: { type: 'Point', coordinates: routePath[0] }
+                },
+                {
+                    type: 'Feature',
+                    properties: { role: 'end' },
+                    geometry: { type: 'Point', coordinates: routePath[routePath.length - 1] }
+                }
+            ]
         };
 
         const routeSource = map.current.getSource('route');
         if (routeSource) {
             routeSource.setData(routeData);
-            map.current.setLayoutProperty('route-line', 'visibility', 'visible');
-            map.current.setLayoutProperty('route-line-pulse', 'visibility', 'visible');
+            map.current.getSource('route-endpoints')?.setData(endpointsData);
+            ['route-glow', 'route-line', 'route-line-pulse', 'route-start-dot', 'route-end-dot'].forEach(layerId => {
+                if (map.current.getLayer(layerId)) {
+                    map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+                }
+            });
         } else {
             map.current.addSource('route', {
                 'type': 'geojson',
                 'data': routeData
             });
 
-            // Bottom layer - thick line
+            map.current.addSource('route-endpoints', {
+                'type': 'geojson',
+                'data': endpointsData
+            });
+
+            // Layer 1: Outer glow effect
+            map.current.addLayer({
+                'id': 'route-glow',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#10b981',
+                    'line-width': 14,
+                    'line-opacity': 0.15,
+                    'line-blur': 6
+                }
+            });
+
+            // Layer 2: Solid base road line
             map.current.addLayer({
                 'id': 'route-line',
                 'type': 'line',
@@ -407,12 +417,12 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
                 },
                 'paint': {
                     'line-color': '#10b981',
-                    'line-width': 8,
-                    'line-opacity': 0.4
+                    'line-width': 6,
+                    'line-opacity': 0.7
                 }
             });
 
-            // Top layer - pulsing dashed line
+            // Layer 3: Animated dashed line on top
             map.current.addLayer({
                 'id': 'route-line-pulse',
                 'type': 'line',
@@ -422,35 +432,59 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
                     'line-cap': 'round'
                 },
                 'paint': {
-                    'line-color': '#10b981',
-                    'line-width': 4,
-                    'line-dasharray': [1, 2]
+                    'line-color': '#34d399',
+                    'line-width': 3,
+                    'line-dasharray': [0, 2, 2]
                 }
             });
 
-            // Animate dash offset for a "moving" effect
-            let step = 0;
-            const animate = () => {
-                if (!map.current || !map.current.getLayer('route-line-pulse')) return;
-
-                step = (step + 0.1) % 4;
-                // We simulate movement by slightly changing the dash array
-                // MapLibre doesn't support dashoffset animation easily, so we toggle between arrays
-                const dashArray = step > 2 ? [1, 2] : [0.5, 2.5];
-
-                if (map.current.getLayer('route-line-pulse')) {
-                    map.current.setPaintProperty('route-line-pulse', 'line-dasharray', dashArray);
+            // Start dot (green)
+            map.current.addLayer({
+                'id': 'route-start-dot',
+                'type': 'circle',
+                'source': 'route-endpoints',
+                'filter': ['==', 'role', 'start'],
+                'paint': {
+                    'circle-radius': 7,
+                    'circle-color': '#10b981',
+                    'circle-stroke-color': 'white',
+                    'circle-stroke-width': 3
                 }
+            });
 
-                requestAnimationFrame(animate);
+            // End dot (red/pink)
+            map.current.addLayer({
+                'id': 'route-end-dot',
+                'type': 'circle',
+                'source': 'route-endpoints',
+                'filter': ['==', 'role', 'end'],
+                'paint': {
+                    'circle-radius': 7,
+                    'circle-color': '#ef4444',
+                    'circle-stroke-color': 'white',
+                    'circle-stroke-width': 3
+                }
+            });
+
+            // Animate the dash pattern
+            let step = 0;
+            const animateDash = () => {
+                if (!map.current || !map.current.getLayer('route-line-pulse')) return;
+                step = (step + 1) % 4;
+                const patterns = [[0, 2, 2], [1, 2, 1], [2, 2, 0], [0, 1, 2, 1]];
+                try {
+                    map.current.setPaintProperty('route-line-pulse', 'line-dasharray', patterns[step]);
+                } catch (e) { /* ignore */ }
+                requestAnimationFrame(animateDash);
             };
-            // animate(); // Keeping it disabled for now as it might be too much, but ready to enable
+            animateDash();
         }
 
+        // Fit map to show the entire route
         const bounds = new maplibregl.LngLatBounds();
-        routeCoords.forEach(coord => bounds.extend(coord));
-        const padding = window.innerWidth < 640 ? 40 : 120;
-        map.current.fitBounds(bounds, { padding: padding, duration: 2000 });
+        routePath.forEach(coord => bounds.extend(coord));
+        const padding = window.innerWidth < 640 ? 50 : 120;
+        map.current.fitBounds(bounds, { padding, duration: 1500, maxZoom: 18 });
 
     }, [destination, userLocation, startPoint, routePath, mapLoaded]);
 

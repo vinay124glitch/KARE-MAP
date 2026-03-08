@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Coffee, Book, Home, FlaskConical } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, MapPin, Coffee, Book, Home, FlaskConical, Navigation } from 'lucide-react';
 import campusData from '../data/campusData';
 
 const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings...", onFocus, showMyLocation = false, externalSearch = '' }) => {
@@ -20,7 +21,8 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
         if (query.length > 0) {
             const results = campusData.features.filter(f =>
                 (f.properties.name && f.properties.name.toLowerCase().includes(query.toLowerCase())) ||
-                (f.properties.type && f.properties.type.toLowerCase().includes(query.toLowerCase()))
+                (f.properties.type && f.properties.type.toLowerCase().includes(query.toLowerCase())) ||
+                (f.properties.category && f.properties.category.toLowerCase().includes(query.toLowerCase()))
             );
             setSearchResults(results);
         } else {
@@ -61,25 +63,25 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
     };
 
     const getIcon = (feature) => {
-        if (!feature || !feature.properties) return <MapPin size={16} color="var(--primary)" />;
+        if (!feature || !feature.properties) return <MapPin size={18} color="var(--primary)" />;
 
         const cat = (feature.properties.category || '').toLowerCase();
         const type = (feature.properties.type || '').toLowerCase();
         const name = (feature.properties.name || '').toLowerCase();
 
-        if (cat === 'food' || name.includes('mess') || name.includes('canteen')) return <Coffee size={16} color="#f59e0b" />;
-        if (cat === 'hostel' || name.includes('hostel')) return <Home size={16} color="#ec4899" />;
-        if (cat === 'academic' || name.includes('block') || name.includes('auditorium')) return <Book size={16} color="#3b82f6" />;
-        if (cat === 'lab' || name.includes('lab')) return <FlaskConical size={16} color="#10b981" />;
-        if (cat === 'library' || name.includes('library')) return <Book size={16} color="#a855f7" />;
+        if (cat === 'food' || name.includes('mess') || name.includes('canteen')) return <Coffee size={18} className="text-secondary" />;
+        if (cat === 'hostel' || name.includes('hostel')) return <Home size={18} style={{ color: '#ec4899' }} />;
+        if (cat === 'academic' || name.includes('block') || name.includes('auditorium')) return <Book size={18} className="text-primary" />;
+        if (cat === 'lab' || name.includes('lab')) return <FlaskConical size={18} className="text-success" />;
+        if (cat === 'library' || name.includes('library')) return <Book size={18} style={{ color: '#a855f7' }} />;
 
-        return <MapPin size={16} color="var(--primary)" />;
+        return <MapPin size={18} className="text-dim" />;
     };
 
     return (
         <div className="search-container">
-            <div className="glass-morphism" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Search size={20} className="text-muted" />
+            <div className="glass-morphism search-input-wrapper">
+                <Search size={18} className="search-icon" />
                 <input
                     type="text"
                     placeholder={placeholder}
@@ -90,82 +92,51 @@ const SearchBar = ({ onSelectDestination, placeholder = "Search campus buildings
                         if (onFocus) onFocus(e);
                     }}
                     onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'white',
-                        flex: 1,
-                        outline: 'none',
-                        fontSize: '16px',
-                        padding: '8px 0'
-                    }}
                 />
             </div>
 
-            {((searchResults.length > 0) || (showMyLocation && isFocused)) && (
-                <div className="glass-morphism search-results-dropdown">
-                    {showMyLocation && isFocused && (
-                        <div
-                            onClick={() => selectResult('MY_LOCATION')}
-                            style={{
-                                padding: window.innerWidth < 480 ? '14px 16px' : '12px 16px',
-                                cursor: 'pointer',
-                                borderBottom: searchResults.length > 0 ? '1px solid var(--glass-border)' : 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                color: 'var(--primary)'
-                            }}
-                            className="hover-effect"
-                        >
-                            <div style={{
-                                width: '24px',
-                                height: '24px',
-                                background: 'rgba(99, 102, 241, 0.2)',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0
-                            }}>
-                                <div style={{ width: '8px', height: '8px', background: 'var(--primary)', borderRadius: '50%', boxShadow: '0 0 10px var(--primary-glow)' }} />
+            <AnimatePresence>
+                {((searchResults.length > 0) || (showMyLocation && isFocused)) && (
+                    <motion.div
+                        className="glass-morphism search-results-dropdown"
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                    >
+                        {showMyLocation && isFocused && (
+                            <div
+                                onClick={() => selectResult('MY_LOCATION')}
+                                className="search-result-item my-location-item"
+                            >
+                                <div className="my-location-indicator">
+                                    <Navigation size={14} className="text-primary" />
+                                </div>
+                                <div className="result-text">
+                                    <span className="result-name">My Current Location</span>
+                                    <span className="result-type">Device GPS</span>
+                                </div>
                             </div>
-                            <span style={{ fontWeight: 600, fontSize: window.innerWidth < 480 ? '15px' : '14px' }}>Use My Live Location</span>
-                        </div>
-                    )}
-                    {searchResults.map((result, idx) => (
-                        <div
-                            key={idx}
-                            onClick={() => selectResult(result)}
-                            style={{
-                                padding: window.innerWidth < 480 ? '14px 16px' : '12px 16px',
-                                cursor: 'pointer',
-                                borderBottom: idx === searchResults.length - 1 ? 'none' : '1px solid var(--glass-border)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px'
-                            }}
-                            className="hover-effect"
-                        >
-                            <div className="result-icon-wrapper" style={{ opacity: 0.9, flexShrink: 0 }}>
-                                {getIcon(result)}
+                        )}
+                        {searchResults.map((result, idx) => (
+                            <div
+                                key={idx}
+                                onClick={() => selectResult(result)}
+                                className="search-result-item"
+                            >
+                                <div className="result-icon-wrapper">
+                                    {getIcon(result)}
+                                </div>
+                                <div className="result-text">
+                                    <span className="result-name">{result.properties.name}</span>
+                                    {result.properties.category && (
+                                        <span className="result-type">{result.properties.category}</span>
+                                    )}
+                                </div>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                                <span style={{
-                                    fontWeight: 500,
-                                    fontSize: window.innerWidth < 480 ? '15px' : '14px',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap'
-                                }}>{result.properties.name}</span>
-                                {result.properties.category && (
-                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{result.properties.category}</span>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

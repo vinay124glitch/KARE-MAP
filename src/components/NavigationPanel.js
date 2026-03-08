@@ -1,5 +1,6 @@
 import React from 'react';
-import { Navigation, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Navigation, X, MapPin, Clock, Footprints } from 'lucide-react';
 import SearchBar from './SearchBar';
 import RouteOverlay from './RouteOverlay';
 
@@ -10,14 +11,17 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
 
     return (
         <div className="navigation-container">
-            <div className="search-group">
+            <motion.div
+                className="search-group"
+                initial={{ y: -50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: 'spring', damping: 15 }}
+            >
                 {!showRouteInputs ? (
                     <div className="search-box-wrapper main-search-bar">
                         <SearchBar
                             onSelectDestination={(loc) => {
                                 onSelectDestination(loc);
-                                // If they select a place, we could automatically show the "From" input
-                                // or just show the POI card.
                             }}
                             placeholder="Search KARE Campus..."
                             externalSearch={activeSearch}
@@ -27,22 +31,27 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
                             onClick={() => setShowRouteInputs(true)}
                             title="Open Directions"
                         >
-                            <Navigation size={20} />
+                            <Navigation size={22} />
                         </button>
                     </div>
                 ) : (
-                    <div className="route-inputs-container animate-in-top">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                            <span style={{ fontSize: '14px', fontWeight: 600 }}>Plan Route</span>
+                    <motion.div
+                        layoutId="nav-box"
+                        className="route-inputs-container glass-morphism"
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h3 style={{ fontSize: '1.1rem', color: 'white' }}>Plan Your Route</h3>
                             <button
                                 onClick={() => setShowRouteInputs(false)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
+                                className="close-directions-btn"
                             >
-                                <X size={18} />
+                                <X size={20} />
                             </button>
                         </div>
-                        <div className="search-box-wrapper">
-                            <span className="search-label">From:</span>
+                        <div className="search-box-wrapper" style={{ marginBottom: '12px' }}>
+                            <div className="search-dot-start" />
                             <SearchBar
                                 onSelectDestination={onSelectStartPoint}
                                 placeholder={startPoint?.name || "Your Current Location"}
@@ -52,7 +61,7 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
                             />
                         </div>
                         <div className="search-box-wrapper">
-                            <span className="search-label">To:</span>
+                            <div className="search-dot-end" />
                             <SearchBar
                                 onSelectDestination={onSelectDestination}
                                 placeholder={selectedPoi?.name || "Search destination..."}
@@ -60,41 +69,64 @@ const NavigationPanel = ({ onSelectDestination, onSelectStartPoint, startPoint, 
                                 externalSearch={activeSearch}
                             />
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
                 <div className="category-chips-container">
-                    {['Hostel', 'Academic', 'Food', 'Lab', 'Library'].map(cat => (
-                        <div
+                    {['Hostel', 'Academic', 'Food', 'Lab', 'Library'].map((cat, i) => (
+                        <motion.div
                             key={cat}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.05 }}
                             className={`category-chip ${activeSearch === cat ? 'active' : ''}`}
                             onClick={() => setActiveSearch(prev => prev === cat ? '' : cat)}
                         >
                             {cat}s
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
-            </div>
+            </motion.div>
 
-            {selectedPoi && (
-                <div className="navigation-panel glass-morphism animate-in-bottom">
-                    <div className="poi-card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <h2 style={{ fontSize: '20px', marginBottom: '4px' }}>{selectedPoi.name}</h2>
-                                <p className="text-muted" style={{ fontSize: '14px' }}>{selectedPoi.description || 'University Campus Location'}</p>
+            <AnimatePresence>
+                {selectedPoi && (
+                    <motion.div
+                        className="poi-panel-wrapper"
+                        initial={{ y: 200, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 200, opacity: 0 }}
+                        transition={{ type: 'spring', damping: 20 }}
+                        style={{ position: 'fixed', bottom: '24px', left: '0', right: '0', display: 'flex', justifyContent: 'center', zIndex: 1000 }}
+                    >
+                        <div className="poi-card-premium glass-morphism">
+                            <div className="poi-header">
+                                <div className="poi-main-info">
+                                    <h2>{selectedPoi.name}</h2>
+                                    <p>{selectedPoi.description || 'University Campus Location'}</p>
+                                </div>
+                                <button className="poi-close-btn" onClick={onClearPoi}>
+                                    <X size={24} />
+                                </button>
                             </div>
-                            <button onClick={onClearPoi} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
-                                <X size={20} />
-                            </button>
+
+                            <div className="poi-quick-stats">
+                                <div className="stat-item">
+                                    <MapPin size={16} className="text-primary" />
+                                    <span>Main Campus</span>
+                                </div>
+                                <div className="stat-item">
+                                    <Clock size={16} className="text-success" />
+                                    <span>Open Now</span>
+                                </div>
+                            </div>
+
+                            <div className="poi-actions">
+                                <RouteOverlay userLocation={startPoint || userLocation} selectedPoi={selectedPoi} />
+                            </div>
                         </div>
-
-                        <RouteOverlay userLocation={startPoint || userLocation} selectedPoi={selectedPoi} />
-
-
-                    </div>
-                </div>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

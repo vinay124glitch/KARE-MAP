@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import MapComponent from './components/MapComponent';
 import NavigationPanel from './components/NavigationPanel';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useNavigation } from './hooks/useNavigation';
-import { Play, Pause, Navigation as NavIcon, ArrowUp, CornerUpLeft, CornerUpRight, CheckCircle } from 'lucide-react';
+import { Play, Pause, Navigation as NavIcon, ArrowUp, CornerUpLeft, CornerUpRight, CheckCircle, Layers, Target, Flame, Settings } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -22,16 +23,12 @@ function App() {
     const handleSelectDestination = (locationData) => {
         setSelectedPoi(locationData);
         setDestination(locationData);
-        setIsFollowing(true); // Automatically start live tracking
+        setIsFollowing(true);
     };
 
     const handleSelectStartPoint = (locationData) => {
         setStartPoint(locationData);
-        if (locationData === null) {
-            setIsFollowing(true);
-        } else {
-            setIsFollowing(false);
-        }
+        setIsFollowing(locationData === null);
     };
 
     const handlePoiClick = (poi) => {
@@ -56,48 +53,51 @@ function App() {
 
     return (
         <div className={`app-container ${destination ? 'has-hud' : ''}`}>
-            {error && !isSimulating && (
-                <div className="error-toast glass-morphism">
-                    {error}. Using default campus view.
-                </div>
-            )}
+            <AnimatePresence>
+                {error && !isSimulating && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="error-toast glass-morphism"
+                    >
+                        <div className="status-dot warning" />
+                        {error}. Using default campus view.
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            {/* Control Buttons Group */}
-            <div className={`map-controls-group ${destination ? 'has-hud' : ''}`}>
-                {/* Simulation Toggle */}
+            {/* Sidebar Controls */}
+            <motion.div
+                className="control-sidebar glass-morphism"
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ type: 'spring', damping: 20 }}
+            >
                 <button
-                    className={`sim-toggle glass-morphism ${isSimulating ? 'active' : ''}`}
+                    className={`control-btn ${isSimulating ? 'active' : ''}`}
                     onClick={() => setIsSimulating(!isSimulating)}
                     title={isSimulating ? "Stop Simulation" : "Start Simulation"}
                 >
-                    {isSimulating ? <Pause size={20} /> : <Play size={20} />}
-                    <span>{isSimulating ? "Stop Sim" : "Start Sim"}</span>
+                    {isSimulating ? <Pause size={22} className="text-secondary" /> : <Play size={22} />}
                 </button>
 
-                {/* Theme Toggle */}
+                <div className="control-divider" />
+
                 <button
-                    className="theme-toggle glass-morphism"
+                    className="control-btn"
                     onClick={toggleTheme}
-                    title={`Switch Map View (Current: ${mapTheme})`}
+                    title={`Map View: ${mapTheme}`}
                 >
-                    <div className="theme-toggle-icon">
-                        {mapTheme === 'satellite' ? '🛰️' :
-                            mapTheme === 'dark' ? '🌑' :
-                                mapTheme === 'light' ? '☀️' :
-                                    mapTheme === 'streets' ? '🗺️' : '🎨'}
-                    </div>
-                    <span style={{ textTransform: 'capitalize' }}>{mapTheme}</span>
+                    <Layers size={22} />
                 </button>
 
-                {/* Follow Mode Toggle / Locate Me */}
                 <button
-                    className={`theme-toggle glass-morphism ${isFollowing ? 'active' : ''}`}
+                    className={`control-btn ${isFollowing ? 'active' : ''}`}
                     onClick={() => {
                         setIsFollowing(true);
-                        setStartPoint(null); // Return to real-time location
-                        // Force a re-center even if already following
+                        setStartPoint(null);
                         if (location) {
-                            // Find the map instance and fly to user
                             const mapInstance = document.querySelector('.maplibregl-map')?.map;
                             if (mapInstance) {
                                 mapInstance.flyTo({
@@ -108,35 +108,29 @@ function App() {
                             }
                         }
                     }}
-                    title={isFollowing ? "Re-center Map" : "Locate Me"}
+                    title="Center on me"
                 >
-                    <div className="theme-toggle-icon">
-                        {isFollowing ? '🎯' : '🧭'}
-                    </div>
-                    <span>{isFollowing ? 'Re-center' : 'Locate Me'}</span>
+                    <Target size={22} className={isFollowing ? 'text-primary' : ''} />
                 </button>
 
-                {/* Heatmap Toggle */}
                 <button
-                    className={`theme-toggle glass-morphism ${showHeatmap ? 'active' : ''}`}
+                    className={`control-btn ${showHeatmap ? 'active' : ''}`}
                     onClick={() => setShowHeatmap(!showHeatmap)}
-                    title="Show Campus Activity Pulse (Heatmap)"
-                    style={showHeatmap ? { background: 'linear-gradient(135deg, #f43f5e, #e11d48)', borderColor: '#fb7185' } : {}}
+                    title="Activity Pulse"
                 >
-                    <div className="theme-toggle-icon">🔥</div>
-                    <span>Pulse</span>
+                    <Flame size={22} className={showHeatmap ? 'text-orange-500' : ''} />
                 </button>
 
-                {/* Debug Mode Toggle */}
+                <div className="control-divider" />
+
                 <button
-                    className={`debug-toggle glass-morphism ${debugMode ? 'active' : ''}`}
+                    className={`control-btn ${debugMode ? 'active' : ''}`}
                     onClick={() => setDebugMode(!debugMode)}
-                    title="Toggle Debug Map (Show Graph Nodes & Edges)"
+                    title="Developer Mode"
                 >
-                    <div style={{ fontSize: '1.2rem' }}>🛠️</div>
-                    <span style={{ display: 'none' }}>Debug</span>
+                    <Settings size={22} />
                 </button>
-            </div>
+            </motion.div>
 
             <MapComponent
                 userLocation={location}
@@ -155,28 +149,40 @@ function App() {
             />
 
             {/* Directions HUD */}
-            {destination && (
-                <div className="directions-hud glass-morphism animate-in-top">
-                    <div className="directions-icon">
-                        {navInfo?.instructionType === 'left' ? <CornerUpLeft size={24} color="white" /> :
-                            navInfo?.instructionType === 'right' ? <CornerUpRight size={24} color="white" /> :
-                                navInfo?.instructionType === 'arrival' ? <CheckCircle size={24} color="#10b981" /> :
-                                    <ArrowUp size={24} color="white" />}
-                    </div>
-                    <div className="directions-content">
-                        <h4 className="directions-title" style={{ fontSize: '18px', color: '#60a5fa', fontWeight: 700 }}>
-                            {navInfo?.nextInstruction || 'Calculating path...'}
-                        </h4>
-                        <div className="directions-stats">
-                            <span style={{ fontWeight: 600, color: 'white' }}>{destination.name}</span>
-                            {navInfo && <span style={{ marginLeft: '8px', opacity: 0.8 }}>• {navInfo.distance} • {navInfo.time}</span>}
+            <AnimatePresence>
+                {destination && (
+                    <motion.div
+                        key="directions-hud"
+                        initial={{ opacity: 0, y: -50, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -50, scale: 0.95 }}
+                        className="directions-hud glass-morphism"
+                    >
+                        <div className="directions-icon-wrapper">
+                            {navInfo?.instructionType === 'left' ? <CornerUpLeft size={28} /> :
+                                navInfo?.instructionType === 'right' ? <CornerUpRight size={28} /> :
+                                    navInfo?.instructionType === 'arrival' ? <CheckCircle size={28} className="text-success" /> :
+                                        <ArrowUp size={28} />}
                         </div>
-                    </div>
-                    <button className="close-directions" onClick={clearPoi} title="Exit Navigation">
-                        ✕
-                    </button>
-                </div>
-            )}
+                        <div className="directions-content">
+                            <span className="directions-next-step">
+                                {navInfo?.nextInstruction || 'Calculating...'}
+                            </span>
+                            <div className="directions-destination">
+                                <strong>{destination.name}</strong>
+                                {navInfo && (
+                                    <span className="directions-meta">
+                                        {navInfo.distance} • {navInfo.time}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <button className="close-directions-btn" onClick={clearPoi}>
+                            ✕
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <NavigationPanel
                 onSelectDestination={handleSelectDestination}
@@ -187,51 +193,38 @@ function App() {
                 userLocation={location}
             />
 
-            {!location && !error && !isSimulating && (
-                <div className="loading-overlay">
-                    <div className="glass-morphism" style={{ padding: '32px', textAlign: 'center' }}>
-                        <div className="animate-pulse-subtle" style={{
-                            width: '64px',
-                            height: '64px',
-                            background: 'var(--primary)',
-                            borderRadius: '50%',
-                            margin: '0 auto 16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <div style={{ width: '48px', height: '48px', background: 'white', borderRadius: '50%' }} />
-                        </div>
-                        <h3>Finding your location...</h3>
-                        <p className="text-muted" style={{ marginBottom: '20px' }}>Please enable GPS for real-time navigation.</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <button
-                                className="btn-primary"
-                                onClick={() => setIsSimulating(true)}
-                                style={{ width: '100%' }}
-                            >
-                                Start Simulation Mode
-                            </button>
-                            <button
-                                style={{
-                                    background: 'transparent',
-                                    border: '1px solid var(--glass-border)',
-                                    color: 'white',
-                                    padding: '8px',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => {
-                                    const defaultLoc = { lat: 9.5743, lng: 77.6761, accuracy: 0 };
-                                    setIsSimulating(true);
-                                }}
-                            >
-                                Use Virtual Location
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {!location && !error && !isSimulating && (
+                    <motion.div
+                        className="loading-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="loading-card glass-morphism"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                        >
+                            <div className="loading-logo">
+                                <div className="logo-ring" />
+                                <div className="logo-pulse" />
+                            </div>
+                            <h3>KARE MAP</h3>
+                            <p>Initializing campus navigation...</p>
+
+                            <div className="loading-actions">
+                                <button className="btn-primary" onClick={() => setIsSimulating(true)}>
+                                    Start Simulation
+                                </button>
+                                <button className="btn-secondary" onClick={() => setIsSimulating(true)}>
+                                    Virtual Mode
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
