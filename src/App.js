@@ -8,7 +8,7 @@ import { Navigation as NavIcon, ArrowUp, CornerUpLeft, CornerUpRight, CheckCircl
 import './App.css';
 
 function App() {
-    const [isFollowing, setIsFollowing] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(true);
     const [isNavigating, setIsNavigating] = useState(false);
     const [mapTheme, setMapTheme] = useState('satellite');
     const [forceStart, setForceStart] = useState(false);

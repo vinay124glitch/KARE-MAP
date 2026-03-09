@@ -265,13 +265,11 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
 
         map.current.easeTo({
             center: [lng, lat],
-            bearing: targetBearing,
-            pitch: targetPitch,
-            duration: 800,
-            essential: true,
-            // Keep user slightly lower center of screen for forward navigation visibility
-            offset: [0, 150],
-            padding: { top: 100 }
+            zoom: MAX_ZOOM,
+            bearing: 0,
+            pitch: 0,
+            duration: 0,
+            essential: true
         });
     }, [processedLocation, heading, mapLoaded, isFollowing]);
 
