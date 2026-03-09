@@ -155,7 +155,9 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
             minZoom: MIN_ZOOM,
             maxZoom: MAX_ZOOM,
             antialias: true,
-            renderWorldCopies: false
+            renderWorldCopies: false,
+            dragRotate: false,
+            touchZoomRotate: false
         });
 
         // Add navigation controls
