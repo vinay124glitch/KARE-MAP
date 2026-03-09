@@ -266,9 +266,9 @@ const MapComponent = ({ userLocation, startPoint, heading, destination, routePat
         map.current.easeTo({
             center: [lng, lat],
             zoom: MAX_ZOOM,
-            bearing: targetBearing,
-            pitch: targetPitch,
-            duration: 800,
+            bearing: 0,
+            pitch: 0,
+            duration: 0,
             essential: true
         });
     }, [processedLocation, heading, mapLoaded, isFollowing]);
