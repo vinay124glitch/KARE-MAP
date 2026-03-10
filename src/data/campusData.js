@@ -445,8 +445,9 @@ const campusData = {
         {
             "type": "Feature",
             "properties": {
-                "name": "TIFFAC CORE",
-                "type": "walkway"
+                "name": "TIFAC CORE",
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1214,7 +1215,8 @@ const campusData = {
             "type": "Feature",
             "properties": {
                 "name": "8TH BLOCK CSE DEPARTMENT",
-                "type": "walkway"
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1270,7 +1272,8 @@ const campusData = {
             "type": "Feature",
             "properties": {
                 "name": "ECE LABS 8TH BLOCK",
-                "type": "walkway"
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1326,7 +1329,8 @@ const campusData = {
             "type": "Feature",
             "properties": {
                 "name": "9TH BLOCK",
-                "type": "walkway"
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1398,7 +1402,8 @@ const campusData = {
             "type": "Feature",
             "properties": {
                 "name": "7TH BLOCK",
-                "type": "walkway"
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1449,8 +1454,9 @@ const campusData = {
         {
             "type": "Feature",
             "properties": {
-                "name": "10 TH BLOCK",
-                "type": "walkway"
+                "name": "10TH BLOCK",
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1494,7 +1500,8 @@ const campusData = {
             "type": "Feature",
             "properties": {
                 "name": "11TH BLOCK",
-                "type": "walkway"
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1538,7 +1545,8 @@ const campusData = {
             "type": "Feature",
             "properties": {
                 "name": "5TH BLOCK",
-                "type": "walkway"
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1666,7 +1674,8 @@ const campusData = {
             "type": "Feature",
             "properties": {
                 "name": "COMPUTER BLOCK",
-                "type": "walkway"
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
@@ -1762,7 +1771,8 @@ const campusData = {
             "type": "Feature",
             "properties": {
                 "name": "ADMISSION BLOCK",
-                "type": "walkway"
+                "category": "Academic",
+                "type": "building"
             },
             "geometry": {
                 "coordinates": [
