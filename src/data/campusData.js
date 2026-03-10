@@ -2184,14 +2184,7 @@ const campusData = {
                 "type": "LineString"
             }
         },
-        {
-            "type": "Feature",
-            "properties": { "type": "road" },
-            "geometry": {
-                "coordinates": [[77.67733230387591, 9.574168728481382], [77.67767013179594, 9.57373109686975], [77.67755624479401, 9.573789883238717], [77.67440516872232, 9.574214451154674]],
-                "type": "LineString"
-            }
-        },
+
         {
             "type": "Feature",
             "properties": { "type": "road" },
