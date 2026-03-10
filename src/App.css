@@ -2,13 +2,25 @@
 /* APP CONTAINER */
 /* ============================= */
 
+body {
+  background-color: #e2e8f0 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .app-container {
-  width: 100vw;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   height: 100vh;
   height: 100dvh;
   position: relative;
   overflow: hidden;
   background: #0b1220;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+  border-left: 1px solid #cbd5e1;
+  border-right: 1px solid #cbd5e1;
 }
 
 /* ============================= */
