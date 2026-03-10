@@ -458,7 +458,7 @@ body {
 .control-sidebar {
   position: absolute;
   right: 12px;
-  bottom: 24px;
+  bottom: 210px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -841,11 +841,22 @@ body {
   background: var(--surface) !important;
   border: none !important;
   border-radius: 8px !important;
-  box-shadow: var(--shadow-flat) !important;
+  box-shadow: var(--shadow-float) !important;
+  overflow: hidden;
+}
+
+/* Update MapLibre Buttons to be larger and easier to tap */
+.maplibregl-ctrl-group button {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  transform: scale(1.4);
 }
 
 .has-poi .control-sidebar {
-  bottom: 220px;
+  bottom: 330px;
 }
 
 @media (max-width: 640px) {
@@ -873,7 +884,7 @@ body {
 
 @media (min-width: 641px) {
   .control-sidebar {
-    bottom: 32px;
+    bottom: 210px;
     right: 24px;
   }
 
@@ -895,7 +906,7 @@ body {
   }
 
   .has-poi .control-sidebar {
-    bottom: 32px;
+    bottom: 210px;
     /* doesnt need to be pushed up on desktop since POI is on left */
   }
 
